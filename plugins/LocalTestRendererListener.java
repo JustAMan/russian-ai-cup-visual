@@ -259,6 +259,7 @@ public final class LocalTestRendererListener {
     	{
     		// no properties file, use defaults
     		port = PLUGIN_PORT_NUMBER;
+    		return;
     	}
 
     	String portNo = properties.getProperty("plugin-port-number");

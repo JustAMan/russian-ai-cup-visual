@@ -43,11 +43,24 @@ class DebugClient(object):
         return self
 
     def __enter__(self):
-        assert self.mode in self.BEGINS
-        self.socket.sendall(self.BEGINS[self.mode])
+        self.start()
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
+        self.stop()
+
+    def start(self):
+        '''
+        Starts sending messages to specified queue (pre- or post-).
+        Note: previous value in the queue will be cleaned up on the server
+        '''
+        assert self.mode in self.BEGINS
+        self.socket.sendall(self.BEGINS[self.mode])
+
+    def stop(self):
+        '''
+        Stops sendings messages to the queue, so server can draw it
+        '''
         assert self.mode in self.ENDS
         self.socket.sendall(self.ENDS[self.mode])
         self.mode = self.MODE_UNKNOWN
