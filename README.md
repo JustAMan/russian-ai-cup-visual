@@ -15,7 +15,9 @@ Currently known commands are:
 * `begin pre` / `begin post` - start queueing commands to be displayed either before or after main drawing
 * `end pre` / `end post` - mark either "pre" or "post" queue of commands as ready to be displayed
 * `circle x0 y0 r0 <color>` - draw a circle at (x0, y0) with radius r0 and color `color`
+* `fill_circle x0 y0 r0 <color>` - draw a filled circle at (x0, y0) with radius r0 and color `color`
 * `rect x1 y1 x2 y2 <color>` - draw a rect with corners at (x1, y1) to (x2, y2) with color `color`
+* `fill_rect x1 y1 x2 y2 <color>` - draw a filled rect with corners at (x1, y1) to (x2, y2) with color `color`
 * `line x1 y1 x2 y2 <color>` - draw a line from (x1, y1) to (x2, y2) with color `color`
 * `text x0 y0 msg <color>` - show `msg` at coordinates (x0, y0) with color `color`
 

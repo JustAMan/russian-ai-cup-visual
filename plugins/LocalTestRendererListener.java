@@ -41,6 +41,8 @@ public final class LocalTestRendererListener {
 		public final static String RECT = "rect";
 		public final static String LINE = "line";
 		public final static String TEXT = "text";
+		public final static String FILL_CIRCLE = "fill_circle";
+		public final static String FILL_RECT = "fill_rect";
 		public final static String UNKNOWN = "unknown";
 		
 		private double x1, y1, x2, y2;
@@ -51,35 +53,24 @@ public final class LocalTestRendererListener {
 		{
 			String[] tokens = line.split(" ");
 			int colorPos = 1;
-			if (tokens[0].equals(CIRCLE))
+			type = tokens[0];
+			if (type.equals(CIRCLE) || type.equals(FILL_CIRCLE))
 			{
-				type = CIRCLE;
 				x1 = Double.parseDouble(tokens[1]);
 				y1 = Double.parseDouble(tokens[2]);
 				x2 = Double.parseDouble(tokens[3]);
 				colorPos = 4;
 			}
-			else if (tokens[0].equals(RECT))
+			else if (type.equals(RECT) || type.equals(LINE) || type.equals(FILL_RECT))
 			{
-				type = RECT;
 				x1 = Double.parseDouble(tokens[1]);
 				y1 = Double.parseDouble(tokens[2]);
 				x2 = Double.parseDouble(tokens[3]);
 				y2 = Double.parseDouble(tokens[4]);
 				colorPos = 5;
 			}
-			else if (tokens[0].equals(LINE))
+			else if (type.equals(TEXT))
 			{
-				type = LINE;
-				x1 = Double.parseDouble(tokens[1]);
-				y1 = Double.parseDouble(tokens[2]);
-				x2 = Double.parseDouble(tokens[3]);
-				y2 = Double.parseDouble(tokens[4]);
-				colorPos = 5;
-			}
-			else if (tokens[0].equals(TEXT))
-			{
-				type = RECT;
 				x1 = Double.parseDouble(tokens[1]);
 				y1 = Double.parseDouble(tokens[2]);
 				text = tokens[3];
@@ -101,10 +92,12 @@ public final class LocalTestRendererListener {
 		{
 			if (type == UNKNOWN) return;
 			graphics.setColor(color);
-			if (type == CIRCLE) listner.drawCircle(x1, y1, x2);
-			if (type == RECT) listner.drawRect(x1, y1, x2, y2);
-			if (type == LINE) listner.drawLine(x1, y1, x2, y2);
-			if (type == TEXT) listner.showText(x1, y1, text);
+			if (type.equals(CIRCLE)) listner.drawCircle(x1, y1, x2);
+			if (type.equals(FILL_CIRCLE)) listner.fillCircle(x1, y1, x2);
+			if (type.equals(RECT)) listner.drawRect(x1, y1, x2, y2);
+			if (type.equals(FILL_RECT)) listner.fillRect(x1, y1, x2, y2);
+			if (type.equals(LINE)) listner.drawLine(x1, y1, x2, y2);
+			if (type.equals(TEXT)) listner.showText(x1, y1, text);
 		}
 	}
     private final class ThreadListener extends Thread
@@ -171,14 +164,25 @@ public final class LocalTestRendererListener {
 	    			}
 	    			else if (queue != 0)
 	    			{
-	    				Message msg = new Message(line);
-	    				if (queue == 1) 
-						{
-	    					messagesPost.add(msg);
-						}
-	    				else if (queue == -1)
+	    				Message msg = null;
+	    				try
 	    				{
-	    					messagesPre.add(msg);
+	    					msg = new Message(line);
+	    				}
+	    				catch (Exception e)
+	    				{
+	    					reportException(e);
+	    				}
+	    				if (msg != null)
+	    				{
+		    				if (queue == 1) 
+							{
+		    					messagesPost.add(msg);
+							}
+		    				else if (queue == -1)
+		    				{
+		    					messagesPre.add(msg);
+		    				}
 	    				}
 	    			}
 					lock.unlock();
