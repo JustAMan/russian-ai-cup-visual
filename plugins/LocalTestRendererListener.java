@@ -103,8 +103,8 @@ public final class LocalTestRendererListener {
 			graphics.setColor(color);
 			if (type.equals(CIRCLE)) listner.drawCircle(x1, y1, x2);
 			if (type.equals(FILL_CIRCLE)) listner.fillCircle(x1, y1, x2);
-			if (type.equals(RECT)) listner.drawRect(x1, y1, x2, y2);
-			if (type.equals(FILL_RECT)) listner.fillRect(x1, y1, x2, y2);
+			if (type.equals(RECT)) listner.drawRect(x1, y1, x2 - x1, y2 - y1);
+			if (type.equals(FILL_RECT)) listner.fillRect(x1, y1, x2 - x1, y2 - y1);
 			if (type.equals(LINE)) listner.drawLine(x1, y1, x2, y2);
 			if (type.equals(TEXT)) listner.showText(x1, y1, text);
 		}
