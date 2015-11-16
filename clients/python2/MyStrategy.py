@@ -32,6 +32,7 @@ class MyStrategy:
                 dbg.circle(game.world_width * game.track_tile_size - 100,
                            game.world_height * game.track_tile_size - 100,
                            50.0, self.GREEN)
+                dbg.text(me.x, me.y, 'wooo!', (0.0, 0.0, 1.0))
 
         move.engine_power = 1.0
         move.throw_projectile = True
