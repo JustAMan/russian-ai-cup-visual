@@ -27,7 +27,7 @@ class MyStrategy:
         """
         if self.debug:
             with self.debug.pre() as dbg:
-                dbg.circle(100.0, 100.0, 50.0, (1.0, 0.0, 0.0))
+                dbg.fill_circle(100.0, 100.0, 50.0, (1.0, 0.0, 0.0))
             with self.debug.post() as dbg:
                 dbg.circle(game.world_width * game.track_tile_size - 100,
                            game.world_height * game.track_tile_size - 100,

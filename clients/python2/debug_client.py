@@ -44,8 +44,14 @@ class DebugClient:
             return Color(r=color[0], g=color[1], b=color[2])
         return color
 
-    def circle(self, x0, y0, r0, color):
+    def __send_command(self, cmd, color, *args):
         assert self.mode != self.MODE_UNKNOWN
         color = self.__make_color(color)
-        self.socket.sendall('circle %f %f %f %f %f %f\n' % (x0, y0, r0,
-                                                            color.r, color.g, color.b))
+        pattern = '%s' + (' %f' * len(args)) + ' %f %f %f\n'
+        self.socket.sendall(pattern % ((cmd,) + args + color))
+
+    def circle(self, x0, y0, r0, color):
+        self.__send_command('circle', color, x0, y0, r0)
+
+    def fill_circle(self, x0, y0, r0, color):
+        self.__send_command('fill_circle', color, x0, y0, r0)
