@@ -73,8 +73,17 @@ public final class LocalTestRendererListener {
 			{
 				x1 = Double.parseDouble(tokens[1]);
 				y1 = Double.parseDouble(tokens[2]);
-				text = tokens[3];
-				colorPos = 4;
+				StringBuilder sb = new StringBuilder();
+				for (int i = 3; i < tokens.length - 3; i++)
+				{
+					sb.append(tokens[i]);
+					if (i < tokens.length - 4)
+					{
+						sb.append(" ");
+					}
+				}
+				text = sb.toString();
+				colorPos = tokens.length - 3;
 			}
 			else
 			{
