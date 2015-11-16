@@ -237,6 +237,7 @@ public final class LocalTestRendererListener {
     private final int PLUGIN_PORT_NUMBER = 13579;
     private ThreadListener listener;
     private int port;
+    private Font textFont;
     
     private void loadProperties() throws IOException
     {
@@ -272,6 +273,8 @@ public final class LocalTestRendererListener {
 			reportException(e1);
 			return;
 		}
+    	
+    	textFont = null;
     	
     	try {
 			listener = new ThreadListener(port);
@@ -333,7 +336,14 @@ public final class LocalTestRendererListener {
     private void showText(double X, double Y, String text)
     {
     	Point2I position = toCanvasPosition(X, Y);
+    	Font oldFont = graphics.getFont();
+    	if (textFont == null)
+    	{
+    		textFont = new Font(oldFont.getFamily(), Font.PLAIN, 10);
+    	}
+    	graphics.setFont(textFont);
     	graphics.drawString(text, position.getX(), position.getY());
+    	graphics.setFont(oldFont);
     }
 
     private void fillArc(double centerX, double centerY, double radius, int startAngle, int arcAngle) {
