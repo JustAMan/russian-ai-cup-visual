@@ -117,8 +117,7 @@ public final class LocalTestRendererListener {
     	public static final String END_POST = "end post";
 
     	private ServerSocket socket;
-    	private ArrayList<Message> messagesPre, messagesPost;
-    	private boolean readyPre, readyPost;
+    	private ArrayList<Message> messagesPre, messagesPost, lastMessagesPre, lastMessagesPost;
     	private int queue;
     	private Lock lock;
     	public ThreadListener(int port) throws IOException
@@ -126,7 +125,8 @@ public final class LocalTestRendererListener {
     		socket = new ServerSocket(port);
     		messagesPre = new ArrayList<Message>();
     		messagesPost = new ArrayList<Message>();
-    		readyPre = readyPost = false;
+            lastMessagesPre = new ArrayList<Message>();
+            lastMessagesPost = new ArrayList<Message>();
     		queue = 0;
     		lock = new ReentrantLock();
     	}
@@ -151,24 +151,30 @@ public final class LocalTestRendererListener {
 					lock.lock();
 	    			if (line.equals(BEGIN_PRE))
 	    			{
-	    	    		readyPre = false;
+                        // swap lists
+                        ArrayList<Message> tmp = lastMessagesPre;
+                        lastMessagesPre = messagesPre;
+                        messagesPre = tmp;
+
 	    	    		messagesPre.clear();
 	    	    		queue = -1;
 	    			}
 	    			else if (line.equals(END_PRE))
 	    			{
-	    				readyPre = true;
 	    				queue = 0;
 	    			}
 	    			else if (line.equals(BEGIN_POST))
 	    			{
-	    				readyPost = false;
+                        // swap lists
+                        ArrayList<Message> tmp = lastMessagesPost;
+                        lastMessagesPost = messagesPost;
+                        messagesPost = tmp;
+
 	    				messagesPost.clear();
 	    				queue = 1;
 	    			}
 	    			else if (line.equals(END_POST))
 	    			{
-	    				readyPost = true;
 	    				queue = 0;
 	    			}
 	    			else if (queue != 0)
@@ -206,13 +212,13 @@ public final class LocalTestRendererListener {
 		{
 			ArrayList<Message> messages;
 			lock.lock();
-			if (isPre && readyPre)
+			if (isPre)
 			{
-				messages = messagesPre;
+				messages = lastMessagesPre;
 			}
-			else if (!isPre && readyPost)
+			else if (!isPre)
 			{
-				messages = messagesPost;
+				messages = lastMessagesPost;
 			}
 			else
 			{
