@@ -25,6 +25,7 @@ public class Car extends RectangularUnit {
     private final double enginePower;
     private final double wheelTurn;
 
+    private final int nextWaypointIndex;
     private final int nextWaypointX;
     private final int nextWaypointY;
 
@@ -35,8 +36,8 @@ public class Car extends RectangularUnit {
             double width, double height, long playerId, int teammateIndex, boolean teammate, CarType type,
             int projectileCount, int nitroChargeCount, int oilCanisterCount, int remainingProjectileCooldownTicks,
             int remainingNitroCooldownTicks, int remainingOilCooldownTicks, int remainingNitroTicks,
-            int remainingOiledTicks, double durability, double enginePower, double wheelTurn, int nextWaypointX,
-            int nextWaypointY, boolean finishedTrack) {
+            int remainingOiledTicks, double durability, double enginePower, double wheelTurn, int nextWaypointIndex,
+            int nextWaypointX, int nextWaypointY, boolean finishedTrack) {
         super(id, mass, x, y, speedX, speedY, angle, angularSpeed, width, height);
 
         this.playerId = playerId;
@@ -54,6 +55,7 @@ public class Car extends RectangularUnit {
         this.durability = durability;
         this.enginePower = enginePower;
         this.wheelTurn = wheelTurn;
+        this.nextWaypointIndex = nextWaypointIndex;
         this.nextWaypointX = nextWaypointX;
         this.nextWaypointY = nextWaypointY;
         this.finishedTrack = finishedTrack;
@@ -167,6 +169,13 @@ public class Car extends RectangularUnit {
      */
     public double getWheelTurn() {
         return wheelTurn;
+    }
+
+    /**
+     * @return Возвращает индекс следующего ключевого тайла в массиве {@code world.waypoints}.
+     */
+    public int getNextWaypointIndex() {
+        return nextWaypointIndex;
     }
 
     /**
