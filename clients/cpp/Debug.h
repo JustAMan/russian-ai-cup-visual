@@ -1,3 +1,6 @@
+#ifndef VISUAL_DEBUG_CLIENT_
+#define VISUAL_DEBUG_CLIENT_
+
 #include <cstdlib>
 #include <cstdio>
 #include <string>
@@ -27,3 +30,5 @@ private:
 
 	int sfd;
 };
+
+#endif
