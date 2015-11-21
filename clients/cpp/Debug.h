@@ -4,6 +4,7 @@
 #include <cstdlib>
 #include <cstdio>
 #include <string>
+#include <cstdint>
 
 class Debug
 {
