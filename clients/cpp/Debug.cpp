@@ -1,11 +1,35 @@
 #include "Debug.h"
-#include <sys/types.h>
-#include <sys/socket.h>
+#if (defined _WIN32 || defined _WIN64)
+# include <winsock2.h>
+# include <Ws2tcpip.h>
+
+#include <BaseTsd.h>
+typedef SSIZE_T ssize_t;
+
+namespace {
+
+	ssize_t close(SOCKET s)
+	{
+		return closesocket(s);
+	}
+
+	ssize_t write(SOCKET s, const char *buf, int len, int flags = 0)
+	{
+		return send(s, buf, len, flags);
+	}
+
+}
+
+#pragma warning(disable: 4244 4996)
+#else
+# include <sys/socket.h>
 #include <netdb.h>
-#include <stdio.h>
-#include <stdlib.h>
 #include <unistd.h>
-#include <string.h>
+#endif
+#include <cstdio>
+#include <cstdlib>
+
+#include <string>
 
 std::string Debug::DEFAULT_HOST = "127.0.0.1";
 std::string Debug::DEFAULT_PORT = "13579";
@@ -142,4 +166,3 @@ void Debug::text(double x, double y, const char* text, int32_t color)
 	sprintf(buf, "text %lf %lf %s", x, y, text);
 	writeWithColor(buf, color);
 }
-
