@@ -4,8 +4,9 @@ Plugin is based on the source that was provided by AI Cup committee.
 
 # How to control
 Plugin is controlled by the property file named `visualizer-plugin.properties` placed in the same directory where `.properties` file which is used by local runner is stored.
-
-Currently there is only one value that plugin will honor, `plugin-port-number`, which is the port which plugin listens for incoming connections. Default value is `13579`.
+Properties are:
+* `plugin-port-number` - port which plugin listens for incoming connections. Default value is `13579`.
+* `plugin-do-tick-sync` - whether to do a sync between local runner and debug client, see "re-playing games" for more.
 
 # How to use
 Plugin starts a server thread that accepts **only one** connection to its port number.
@@ -22,6 +23,15 @@ Currently known commands are:
 * `text x0 y0 msg <color>` - show `msg` at coordinates (x0, y0) with color `color`
 
 Color `<color>` is actually an `r g b` triple of floats where `0.0 0.0 0.0` will be black and `1.0 1.0 1.0` will be white.
+
+# Re-playing games from russianaicup.ru with visual debug
+To support that your debug client has to support syncing model.
+It is currently done as follows:
+1. Each tick plugin sends to the client `SYNC <TICK_NUMBER>` line and waits for `ACK` from client
+2. Debug client should respond with `ACK` as soon as the strategy using this client has finished computing `<TICK_NUMBER>` tick
+
+This mode has to be enabled in `visualizer-plugin.properties` with setting `plugin-do-tick-sync` to either `true` or to `auto`.
+Auto mode will detect replay mode by checking names of players and assuming that if there is **NO** `MyStrategy` then it is a replay and it requires sync mode.
 
 # How strategy can use it
 Well, this is actually up to the user... currently there is very simple debug client implemented in Python provided.
