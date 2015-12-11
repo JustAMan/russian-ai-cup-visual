@@ -23,6 +23,8 @@ class DebugClient(object):
         self.socket.connect((host or self.DEFAULT_HOST, port or self.DEFAULT_PORT))
         self.mode = self.MODE_UNKNOWN
         self.convert_tile_coords = None
+        self.last_sync_tick = None
+        self.reader = self.__buffered_reader()
 
     def pre(self):
         '''
@@ -133,3 +135,50 @@ class DebugClient(object):
         '''
         self.__send_command('text', color, args=self.__convert_coords(x0, y0) + (msg,),
                             pattern='%s %f %f %s %f %f %f\n')
+
+    def is_replay(self, world):
+        '''
+        Method to check if given world corresponds to a replay from russianaicup.ru
+        '''
+        try:
+            return self.__is_replay
+        except AttributeError:
+            result = True
+            for player in world.players:
+                if player.name.startswith('MyStrategy'):
+                    result = False
+                    break
+            self.__is_replay = result #pylint: disable=attribute-defined-outside-init
+            return result
+
+    def __buffered_reader(self):
+        '''
+        Internal generator that implements buffered reads from the socket
+        '''
+        buf = ''
+        while True:
+            if '\n' in buf:
+                line, buf = buf.split('\n', 1)
+                yield line
+            else:
+                try:
+                    buf += self.socket.recv(4096)
+                except socket.error:
+                    return
+
+    def syncronize(self, world):
+        '''
+        Method to syncronize with the debug server if playing from a replay;
+        waits for "sync event" and sends acknowledgement
+        '''
+        if not self.is_replay(world):
+            return
+        if self.last_sync_tick is None or world.tick > self.last_sync_tick:
+            if self.last_sync_tick is not None:
+                # server waits for an acknowledgement from us
+                self.socket.sendall('ack\n')
+
+            # get a new sync tick
+            line = self.reader.next()
+            if line.startswith('sync '):
+                self.last_sync_tick = int(line.split()[1].strip())

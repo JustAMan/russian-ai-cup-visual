@@ -33,6 +33,11 @@ class MyStrategy: #pylint: disable=old-style-class, too-few-public-methods
         @type move: Move
         """
         if self.debug:
+            # call this the very first thing in your move()
+            # to sync replays played in local runner and in repeater
+            self.debug.syncronize(world)
+
+        if self.debug:
             self.debug.use_tile_coords(game)
             with self.debug.pre() as dbg:
                 dbg.fill_circle(100.0, 100.0, 50.0, (1.0, 0.0, 0.0))
