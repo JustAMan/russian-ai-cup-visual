@@ -6,11 +6,14 @@ import contextlib
 import os
 import errno
 import subprocess
+import zipfile
+import json
 
 RUN_PLAYER_RE = re.compile(r'''<span\s+class\s*=\s*["']?run-player["']?\s*(.*)>''')
 TOKEN_RE = re.compile(r'''.*data-token\s*=\s*["']?([^'"\s]+)['"]?''')
 CONTENT_LENGTH_RE = re.compile(r'Content-Length:\s*(\d+)')
 CHUNK = 1 * 1024 * 1024
+MAP_NAME_RE = re.compile(r'maps/([^.]+)\.map')
 
 def readPage(url):
     with contextlib.closing(urllib.urlopen(url)) as target:
@@ -79,6 +82,40 @@ def ensureGameUrl(gameUrl):
         return gameUrl
     return 'http://russianaicup.ru/game/view/%d' % gameNumber
 
+def checkMap(replayFile):
+    knownMaps = set()
+    with zipfile.ZipFile('local-runner.jar') as localRunner:
+        for name in localRunner.namelist():
+            if MAP_NAME_RE.match(name):
+                knownMaps.add(MAP_NAME_RE.match(name).group(1))
+
+    with open(replayFile) as inp:
+        data = json.loads(inp.readline())
+    mapName = data['mapName']
+    if mapName.endswith('.map'):
+        mapName = mapName[:-4]
+    if mapName not in knownMaps:
+        print 'unknown map'
+        unpackMap(mapName, data)
+
+TILE_NAMES = 'EMPTY VERTICAL HORIZONTAL LEFT_TOP_CORNER RIGHT_TOP_CORNER LEFT_BOTTOM_CORNER RIGHT_BOTTOM_CORNER LEFT_HEADED_T RIGHT_HEADED_T TOP_HEADED_T BOTTOM_HEADED_T CROSSROADS'.split()
+TILE_CHARS = u'\u2588 \u2551 \u2550 \u2554 \u2557 \u255a \u255d \u2563 \u2560 \u2569 \u2566 \u256c'.split()
+
+def unpackMap(mapName, data):
+    with open('%s.map' % mapName, 'w') as mapFile:
+        mapFile.write('%s %s\n' % (data['width'], data['height']))
+        for y in xrange(int(data['height'])):
+            for x in xrange(int(data['width'])):
+                tile = data['tilesXY'][x][y]
+                char = TILE_CHARS[TILE_NAMES.index(tile)]
+                mapFile.write(char.encode('utf8'))
+            mapFile.write('\n')
+
+        mapFile.write('%s\n' % len(data['waypoints']))
+        for wx, wy in data['waypoints']:
+            mapFile.write('%s %s\n' % (wx, wy))
+        mapFile.write('%s\n' % data['startingDirection'])
+
 def main(gameUrl):
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
     try:
@@ -99,6 +136,8 @@ def main(gameUrl):
                 props.append(line)
     with open('local-runner-replay.properties', 'w') as out:
         out.write(''.join(props))
+    checkMap(replayFile)
+
     subprocess.check_call(['java', '-jar', "local-runner.jar", 'local-runner-replay.properties'], shell=False)
 
 if __name__ == '__main__':
