@@ -3,17 +3,21 @@ import java.awt.*;
 import static java.lang.StrictMath.*;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.*;
 import java.util.ArrayList;
 import java.util.Properties;
+import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -115,11 +119,18 @@ public final class LocalTestRendererListener {
     	public static final String END_PRE = "end pre";
     	public static final String BEGIN_POST = "begin post";
     	public static final String END_POST = "end post";
+    	public static final String SYNC = "sync";
+    	public static final String ACKNOWLEDGE = "ack";
+
+    	private static final int BUFFER_SIZE_BYTES = 1 << 20;
 
     	private ServerSocket socket;
     	private ArrayList<Message> messagesPre, messagesPost, lastMessagesPre, lastMessagesPost;
     	private int queue;
     	private Lock lock;
+    	private OutputStream outputStream;
+    	private OutputStreamWriter outputWriter;
+    	private SynchronousQueue<String> acknowledgeQueue;
     	public ThreadListener(int port) throws IOException
     	{
     		socket = new ServerSocket(port);
@@ -129,14 +140,35 @@ public final class LocalTestRendererListener {
             lastMessagesPost = new ArrayList<Message>();
     		queue = 0;
     		lock = new ReentrantLock();
+    		outputStream = null;
+    		outputWriter = null;
+    		acknowledgeQueue = new SynchronousQueue<String>(true);
+    	}
+    	
+    	public boolean isReady()
+    	{
+    		return outputWriter != null;
+    	}
+    	
+    	public boolean syncronize(int tick) throws IOException, InterruptedException
+    	{
+    		outputWriter.write(SYNC + " " + tick + "\n");
+    		outputWriter.flush();
+    		outputStream.flush();
+    		return acknowledgeQueue.take().equals(ACKNOWLEDGE);
     	}
     	
     	public void run()
     	{
     		try
     		{
-				Socket client = socket.accept();;
+				Socket client = socket.accept();
+				client.setSendBufferSize(BUFFER_SIZE_BYTES);
+				client.setReceiveBufferSize(BUFFER_SIZE_BYTES);
+				client.setTcpNoDelay(true);
 				BufferedReader reader = new BufferedReader(new InputStreamReader(client.getInputStream()));
+				outputStream = client.getOutputStream();
+				outputWriter = new OutputStreamWriter(outputStream);
 	    		while (true)
 	    		{
 	    			String line = null;
@@ -149,7 +181,11 @@ public final class LocalTestRendererListener {
 	    			}
 	    			if (line == null) return;
 					lock.lock();
-	    			if (line.equals(BEGIN_PRE))
+					if (line.equals(ACKNOWLEDGE))
+					{
+						acknowledgeQueue.put(line);
+					}
+					else if (line.equals(BEGIN_PRE))
 	    			{
                         // swap lists
                         ArrayList<Message> tmp = lastMessagesPre;
@@ -236,6 +272,9 @@ public final class LocalTestRendererListener {
 		}
 
     }
+    
+    enum SyncMode {DISABLED, ENABLED, AUTO};
+    private static final String LOCAL_STRATEGY_NAME = "MyStrategy";
 
     private Graphics graphics;
     private World world;
@@ -250,9 +289,11 @@ public final class LocalTestRendererListener {
     private double height;
     
     private final int PLUGIN_PORT_NUMBER = 13579;
+    private final SyncMode PLUGIN_DO_SYNC_DEFAULT = SyncMode.DISABLED;
     private ThreadListener listener;
     private int port;
     private Font textFont;
+    private SyncMode doSync;
     
     private void loadProperties() throws IOException
     {
@@ -270,6 +311,19 @@ public final class LocalTestRendererListener {
 
     	String portNo = properties.getProperty("plugin-port-number");
     	port = Integer.parseInt(portNo);
+    	String doSyncStr = properties.getProperty("plugin-do-tick-sync");
+    	if (doSyncStr.equalsIgnoreCase("true"))
+    	{
+    		doSync = SyncMode.ENABLED;
+    	}
+    	else if (doSyncStr.equalsIgnoreCase("auto"))
+    	{
+    		doSync = SyncMode.AUTO;
+    	}
+    	else
+    	{
+    		doSync = SyncMode.DISABLED;
+    	}
     }
     
     public LocalTestRendererListener()
@@ -282,6 +336,7 @@ public final class LocalTestRendererListener {
 	
     	// load defaults
     	port = PLUGIN_PORT_NUMBER;
+    	doSync = PLUGIN_DO_SYNC_DEFAULT;
     	// now try loading from properties
     	try {
 			loadProperties();
@@ -304,7 +359,41 @@ public final class LocalTestRendererListener {
     public void beforeDrawScene(Graphics graphics, World world, Game game, int canvasWidth, int canvasHeight,
                                 double left, double top, double width, double height) {
         updateFields(graphics, world, game, canvasWidth, canvasHeight, left, top, width, height);
-        if (listener != null) listener.draw(graphics, this, true);
+        if (listener != null)
+    	{
+        	if (doSync == SyncMode.AUTO)
+        	{
+        		doSync = SyncMode.ENABLED;
+        		for (int i = 0; i < world.getPlayers().length; i++)
+        		{
+        			if (world.getPlayers()[i].getName().startsWith(LOCAL_STRATEGY_NAME))
+        			{
+        				doSync = SyncMode.DISABLED;
+        				break;
+        			}
+        		}
+        	}
+
+        	if (doSync == SyncMode.ENABLED)
+        	{
+        		while (!listener.isReady())
+    			{
+        			try {
+						Thread.sleep(50);
+					} catch (InterruptedException e) {
+						// TODO Auto-generated catch block
+						reportException(e);
+					}
+        			// do nothing waiting for debug client
+    			};
+	        	try {
+					listener.syncronize(world.getTick());
+				} catch (IOException | InterruptedException e) {
+					reportException(e);
+				}
+        	}
+        	listener.draw(graphics, this, true);
+    	}
     }
 
     public void afterDrawScene(Graphics graphics, World world, Game game, int canvasWidth, int canvasHeight,
