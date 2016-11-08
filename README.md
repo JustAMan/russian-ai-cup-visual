@@ -25,6 +25,8 @@ Currently known commands are:
 Color `<color>` is actually an `r g b` triple of floats where `0.0 0.0 0.0` will be black and `1.0 1.0 1.0` will be white.
 
 # Re-playing games from russianaicup.ru with visual debug
+## NOTE: currently it is untested if it works with replays from AI cup 2016
+
 To support that your debug client has to support syncing model.
 It is currently done as follows:
 1. Each tick plugin sends to the client `SYNC <TICK_NUMBER>` line and waits for `ACK` from client
