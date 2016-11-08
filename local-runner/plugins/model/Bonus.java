@@ -1,15 +1,15 @@
 package model;
 
 /**
- * Класс, определяющий бонус --- неподвижный полезный объект. Содержит также все свойства прямоугольного юнита.
+ * Класс, определяющий бонус --- неподвижный полезный объект. Содержит также все свойства круглого юнита.
  */
-public class Bonus extends RectangularUnit {
+public class Bonus extends CircularUnit {
     private final BonusType type;
 
     public Bonus(
-            long id, double mass, double x, double y, double speedX, double speedY, double angle, double angularSpeed,
-            double width, double height, BonusType type) {
-        super(id, mass, x, y, speedX, speedY, angle, angularSpeed, width, height);
+            long id, double x, double y, double speedX, double speedY, double angle, Faction faction, double radius,
+            BonusType type) {
+        super(id, x, y, speedX, speedY, angle, faction, radius);
 
         this.type = type;
     }

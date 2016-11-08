@@ -9,13 +9,15 @@ public class Player {
     private final String name;
     private final boolean strategyCrashed;
     private final int score;
+    private final Faction faction;
 
-    public Player(long id, boolean me, String name, boolean strategyCrashed, int score) {
+    public Player(long id, boolean me, String name, boolean strategyCrashed, int score, Faction faction) {
         this.id = id;
         this.me = me;
         this.name = name;
         this.strategyCrashed = strategyCrashed;
         this.score = score;
+        this.faction = faction;
     }
 
     /**
@@ -52,5 +54,12 @@ public class Player {
      */
     public int getScore() {
         return score;
+    }
+
+    /**
+     * @return Возвращает фракцию, к которой принадлежит данный игрок.
+     */
+    public Faction getFaction() {
+        return faction;
     }
 }

@@ -1,43 +1,41 @@
 package model;
 
 /**
- * Класс, определяющий метательный снаряд. Содержит также все свойства круглого юнита.
+ * Класс, определяющий снаряд. Содержит также все свойства круглого юнита.
  */
 public class Projectile extends CircularUnit {
-    private final long carId;
-    private final long playerId;
     private final ProjectileType type;
+    private final long ownerUnitId;
+    private final long ownerPlayerId;
 
     public Projectile(
-            long id, double mass, double x, double y,
-            double speedX, double speedY, double angle,
-            double angularSpeed, double radius,
-            long carId, long playerId, ProjectileType type) {
-        super(id, mass, x, y, speedX, speedY, angle, angularSpeed, radius);
+            long id, double x, double y, double speedX, double speedY, double angle, Faction faction, double radius,
+            ProjectileType type, long ownerUnitId, long ownerPlayerId) {
+        super(id, x, y, speedX, speedY, angle, faction, radius);
 
-        this.carId = carId;
-        this.playerId = playerId;
         this.type = type;
+        this.ownerUnitId = ownerUnitId;
+        this.ownerPlayerId = ownerPlayerId;
     }
 
     /**
-     * @return Возвращает идентификатор кодемобиля, выпустившего данный снаряд.
-     */
-    public long getCarId() {
-        return carId;
-    }
-
-    /**
-     * @return Возвращает идентификатор игрока, кодемобиль которого выпустил данный снаряд.
-     */
-    public long getPlayerId() {
-        return playerId;
-    }
-
-    /**
-     * @return Возвращает тип метательного снаряда.
+     * @return Возвращает тип снаряда.
      */
     public ProjectileType getType() {
         return type;
+    }
+
+    /**
+     * @return Возвращает идентификатор юнита, создавшего данный снаряд.
+     */
+    public long getOwnerUnitId() {
+        return ownerUnitId;
+    }
+
+    /**
+     * @return Возвращает идентификатор игрока, юнит которого создал данный снаряд или {@code -1}.
+     */
+    public long getOwnerPlayerId() {
+        return ownerPlayerId;
     }
 }

@@ -1,30 +1,31 @@
 package model;
 
-import static java.lang.StrictMath.*;
+
+import static java.lang.StrictMath.PI;
+import static java.lang.StrictMath.atan2;
+import static java.lang.StrictMath.hypot;
 
 /**
  * Базовый класс для определения объектов (<<юнитов>>) на игровом поле.
  */
+@SuppressWarnings({"AbstractClassWithoutAbstractMethods", "WeakerAccess"})
 public abstract class Unit {
     private final long id;
-    private final double mass;
     private final double x;
     private final double y;
     private final double speedX;
     private final double speedY;
     private final double angle;
-    private final double angularSpeed;
+    private final Faction faction;
 
-    protected Unit(
-            long id, double mass, double x, double y, double speedX, double speedY, double angle, double angularSpeed) {
+    protected Unit(long id, double x, double y, double speedX, double speedY, double angle, Faction faction) {
         this.id = id;
-        this.mass = mass;
         this.x = x;
         this.y = y;
         this.speedX = speedX;
         this.speedY = speedY;
         this.angle = angle;
-        this.angularSpeed = angularSpeed;
+        this.faction = faction;
     }
 
     /**
@@ -32,13 +33,6 @@ public abstract class Unit {
      */
     public long getId() {
         return id;
-    }
-
-    /**
-     * @return Возвращает массу объекта в единицах массы.
-     */
-    public double getMass() {
-        return mass;
     }
 
     /**
@@ -57,6 +51,8 @@ public abstract class Unit {
 
     /**
      * @return Возвращает X-составляющую скорости объекта. Ось абсцисс направлена слева направо.
+     * <p>
+     * Для юнитов, способных мгновенно менять свою скорость, возвращается значение перемещения за последний тик.
      */
     public final double getSpeedX() {
         return speedX;
@@ -64,6 +60,8 @@ public abstract class Unit {
 
     /**
      * @return Возвращает Y-составляющую скорости объекта. Ось ординат направлена сверху вниз.
+     * <p>
+     * Для юнитов, способных мгновенно менять свою скорость, возвращается значение перемещения за последний тик.
      */
     public final double getSpeedY() {
         return speedY;
@@ -78,11 +76,10 @@ public abstract class Unit {
     }
 
     /**
-     * @return Возвращает скорость вращения объекта.
-     * Положительные значения соответствуют вращению по часовой стрелке.
+     * @return Возвращает фракцию, к которой принадлежит данный юнит.
      */
-    public double getAngularSpeed() {
-        return angularSpeed;
+    public Faction getFaction() {
+        return faction;
     }
 
     /**
