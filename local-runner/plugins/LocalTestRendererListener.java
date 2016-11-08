@@ -387,7 +387,7 @@ public final class LocalTestRendererListener {
         			// do nothing waiting for debug client
     			};
 	        	try {
-					listener.syncronize(world.getTick());
+					listener.syncronize(world.getTickIndex());
 				} catch (IOException | InterruptedException e) {
 					reportException(e);
 				}

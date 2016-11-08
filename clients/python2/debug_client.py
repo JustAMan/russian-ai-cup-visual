@@ -22,7 +22,6 @@ class DebugClient(object):
         self.socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, True)
         self.socket.connect((host or self.DEFAULT_HOST, port or self.DEFAULT_PORT))
         self.mode = self.MODE_UNKNOWN
-        self.convert_tile_coords = None
         self.last_sync_tick = None
         self.reader = self.__buffered_reader()
 
@@ -75,21 +74,6 @@ class DebugClient(object):
             return Color(r=color[0], g=color[1], b=color[2])
         return color
 
-    def use_tile_coords(self, game=None):
-        '''
-        Turns on or off coordinates convertion from tiles to absolute; to turn convertion on
-        pass actual in game object, to turn off pass None
-        '''
-        if game:
-            self.convert_tile_coords = game.track_tile_size
-        else:
-            self.convert_tile_coords = None
-
-    def __convert_coords(self, *coords): #pylint: disable=missing-docstring
-        if self.convert_tile_coords is not None:
-            return tuple(coord * self.convert_tile_coords for coord in coords)
-        return coords
-
     def __send_command(self, cmd, color, args, pattern=None): #pylint: disable=missing-docstring
         assert self.mode != self.MODE_UNKNOWN
         color = self.__make_color(color)
@@ -101,39 +85,39 @@ class DebugClient(object):
         '''
         Draws a non-filled circle at (x0, y0) with radius "r0" and color "color"
         '''
-        self.__send_command('circle', color, args=self.__convert_coords(x0, y0, r0))
+        self.__send_command('circle', color, args=(x0, y0, r0))
 
     def fill_circle(self, x0, y0, r0, color): #pylint: disable=invalid-name
         '''
         Draws a filled circle at (x0, y0) with radius "r0" and color "color"
         '''
-        self.__send_command('fill_circle', color, args=self.__convert_coords(x0, y0, r0))
+        self.__send_command('fill_circle', color, args=(x0, y0, r0))
 
     def rect(self, x0, y0, x1, y1, color): #pylint: disable=invalid-name, too-many-arguments
         '''
         Draws a non-filled rect with top-left at (x0, y0) and bottom-right at (x1, y1)
         with color "color"
         '''
-        self.__send_command('rect', color, args=self.__convert_coords(x0, y0, x1, y1))
+        self.__send_command('rect', color, args=(x0, y0, x1, y1))
 
     def fill_rect(self, x0, y0, x1, y1, color): #pylint: disable=invalid-name, too-many-arguments
         '''
         Draws a filled rect with top-left at (x0, y0) and bottom-right at (x1, y1)
         with color "color"
         '''
-        self.__send_command('fill_rect', color, args=self.__convert_coords(x0, y0, x1, y1))
+        self.__send_command('fill_rect', color, args=(x0, y0, x1, y1))
 
     def line(self, x0, y0, x1, y1, color): #pylint: disable=invalid-name, too-many-arguments
         '''
         Draws a line from (x0, y0) to (x1, y1) with color "color"
         '''
-        self.__send_command('line', color, args=self.__convert_coords(x0, y0, x1, y1))
+        self.__send_command('line', color, args=(x0, y0, x1, y1))
 
     def text(self, x0, y0, msg, color): #pylint: disable=invalid-name
         '''
         Shows a text message "msg" at (x0, y0) with color "color"
         '''
-        self.__send_command('text', color, args=self.__convert_coords(x0, y0) + (msg,),
+        self.__send_command('text', color, args=(x0, y0, msg),
                             pattern='%s %f %f %s %f %f %f\n')
 
     def is_replay(self, world):
