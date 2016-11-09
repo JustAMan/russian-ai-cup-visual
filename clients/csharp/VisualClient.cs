@@ -64,6 +64,8 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         /// </summary>
         public void Circle(double x, double y, float radius, float r = 0f, float g = 0f, float b = 0f)
         {
+            ValidateColor(r, g, b);
+        	
             SendCommand($"circle {x} {y} {radius} {r} {g} {b}");
         }
 
@@ -72,6 +74,8 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         /// </summary>
         public void FillCircle(double x, double y, float radius, float r = 0f, float g = 0f, float b = 0f)
         {
+            ValidateColor(r, g, b);
+
             SendCommand($"fill_circle {x} {y} {radius} {r} {g} {b}");
         }
 
@@ -80,6 +84,8 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         /// </summary>
         public void Rect(double x1, double y1, double x2, double y2, float r = 0f, float g = 0f, float b = 0f)
         {
+            ValidateColor(r, g, b);
+
             SendCommand($"rect {x1} {y1} {x2} {y2} {r} {g} {b}");
         }
 
@@ -88,6 +94,8 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         /// </summary>
         public void FillRect(double x1, double y1, double x2, double y2, float r = 0f, float g = 0f, float b = 0f)
         {
+            ValidateColor(r, g, b);
+
             SendCommand($"fill_rect {x1} {y1} {x2} {y2} {r} {g} {b}");
         }
 
@@ -96,6 +104,8 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         /// </summary>
         public void Line(double x1, double y1, double x2, double y2, float r = 0f, float g = 0f, float b = 0f)
         {
+            ValidateColor(r, g, b);
+
             SendCommand($"line {x1} {y1} {x2} {y2} {r} {g} {b}");
         }
 
@@ -104,6 +114,8 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         /// </summary>
         public void Text(double x, double y, string msg, float r = 0f, float g = 0f, float b = 0f)
         {
+            ValidateColor(r, g, b);
+
             SendCommand($"text {x} {y} {msg} {r} {g} {b}");
         }
 
@@ -137,6 +149,25 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         public void Close()
         {
             _client.Close();
+        }
+
+        private static void ValidateColor(float r, float g, float b)
+        {
+            const string outOfRangeMessage = "The color value must be in range from 0.0 to 1.0 .";
+            if (r < 0 || r > 1)
+            {
+                throw new ArgumentOutOfRangeException(nameof(r), outOfRangeMessage);
+            }
+
+            if (g < 0 || g > 1)
+            {
+                throw new ArgumentOutOfRangeException(nameof(g), outOfRangeMessage);
+            }
+
+            if (b < 0 || b > 1)
+            {
+                throw new ArgumentOutOfRangeException(nameof(b), outOfRangeMessage);
+            }
         }
     }
 }
