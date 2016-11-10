@@ -101,32 +101,37 @@ public final class LocalTestRendererListener {
 			color = new Color(r, g, b);
 		}
 		
-		public void draw(Graphics graphics, LocalTestRendererListener listner)
+		public void draw(Graphics graphics, LocalTestRendererListener listner, boolean useAbsCoords)
 		{
 			if (type == UNKNOWN) return;
 			graphics.setColor(color);
-			if (type.equals(CIRCLE)) listner.drawCircle(x1, y1, x2);
-			if (type.equals(FILL_CIRCLE)) listner.fillCircle(x1, y1, x2);
-			if (type.equals(RECT)) listner.drawRect(x1, y1, x2 - x1, y2 - y1);
-			if (type.equals(FILL_RECT)) listner.fillRect(x1, y1, x2 - x1, y2 - y1);
-			if (type.equals(LINE)) listner.drawLine(x1, y1, x2, y2);
-			if (type.equals(TEXT)) listner.showText(x1, y1, text);
+			if (type.equals(CIRCLE)) listner.drawCircle(x1, y1, x2, useAbsCoords);
+			if (type.equals(FILL_CIRCLE)) listner.fillCircle(x1, y1, x2, useAbsCoords);
+			if (type.equals(RECT)) listner.drawRect(x1, y1, x2 - x1, y2 - y1, useAbsCoords);
+			if (type.equals(FILL_RECT)) listner.fillRect(x1, y1, x2 - x1, y2 - y1, useAbsCoords);
+			if (type.equals(LINE)) listner.drawLine(x1, y1, x2, y2, useAbsCoords);
+			if (type.equals(TEXT)) listner.showText(x1, y1, text, useAbsCoords);
 		}
 	}
+
+    enum TargetQueue {PRE, POST, ABS, NONE};
+
     private final class ThreadListener extends Thread
     {
     	public static final String BEGIN_PRE = "begin pre";
     	public static final String END_PRE = "end pre";
     	public static final String BEGIN_POST = "begin post";
     	public static final String END_POST = "end post";
+        public static final String BEGIN_ABS = "begin abs";
+        public static final String END_ABS = "end abs";
     	public static final String SYNC = "sync";
     	public static final String ACKNOWLEDGE = "ack";
 
     	private static final int BUFFER_SIZE_BYTES = 1 << 20;
-
+        
     	private ServerSocket socket;
-    	private ArrayList<Message> messagesPre, messagesPost, lastMessagesPre, lastMessagesPost;
-    	private int queue;
+    	private ArrayList<Message> messagesPre, messagesPost, messagesAbs, lastMessagesPre, lastMessagesPost, lastMessagesAbs;
+    	private TargetQueue queue;
     	private Lock lock;
     	private OutputStream outputStream;
     	private OutputStreamWriter outputWriter;
@@ -136,9 +141,12 @@ public final class LocalTestRendererListener {
     		socket = new ServerSocket(port);
     		messagesPre = new ArrayList<Message>();
     		messagesPost = new ArrayList<Message>();
+            messagesAbs = new ArrayList<Message>();
             lastMessagesPre = new ArrayList<Message>();
             lastMessagesPost = new ArrayList<Message>();
-    		queue = 0;
+            lastMessagesAbs = new ArrayList<Message>();
+
+    		queue = TargetQueue.NONE;
     		lock = new ReentrantLock();
     		outputStream = null;
     		outputWriter = null;
@@ -193,11 +201,11 @@ public final class LocalTestRendererListener {
                         messagesPre = tmp;
 
 	    	    		messagesPre.clear();
-	    	    		queue = -1;
+	    	    		queue = TargetQueue.PRE;
 	    			}
 	    			else if (line.equals(END_PRE))
 	    			{
-	    				queue = 0;
+	    				queue = TargetQueue.NONE;
 	    			}
 	    			else if (line.equals(BEGIN_POST))
 	    			{
@@ -207,13 +215,27 @@ public final class LocalTestRendererListener {
                         messagesPost = tmp;
 
 	    				messagesPost.clear();
-	    				queue = 1;
+	    				queue = TargetQueue.POST;
 	    			}
 	    			else if (line.equals(END_POST))
 	    			{
-	    				queue = 0;
+	    				queue = TargetQueue.NONE;
 	    			}
-	    			else if (queue != 0)
+                    else if (line.equals(BEGIN_ABS))
+                    {
+                        // swap lists
+                        ArrayList<Message> tmp = lastMessagesAbs;
+                        lastMessagesAbs = messagesAbs;
+                        messagesAbs = tmp;
+
+	    				messagesAbs.clear();
+                        queue = TargetQueue.ABS;
+                    }
+                    else if (line.equals(END_ABS))
+                    {
+	    				queue = TargetQueue.NONE;
+                    }
+	    			else if (queue != TargetQueue.NONE)
 	    			{
 	    				Message msg = null;
 	    				try
@@ -226,14 +248,18 @@ public final class LocalTestRendererListener {
 	    				}
 	    				if (msg != null)
 	    				{
-		    				if (queue == 1) 
-							{
-		    					messagesPost.add(msg);
-							}
-		    				else if (queue == -1)
-		    				{
-		    					messagesPre.add(msg);
-		    				}
+                            switch (queue)
+                            {
+                                case POST:
+                                    messagesPost.add(msg);
+                                    break;
+                                case PRE:
+                                    messagesPre.add(msg);
+                                    break;
+                                case ABS:
+                                    messagesAbs.add(msg);
+                                    break;
+                            }
 	    				}
 	    			}
 					lock.unlock();
@@ -244,28 +270,30 @@ public final class LocalTestRendererListener {
     			reportException(e);
     		}
     	}
-		public void draw(Graphics graphics, LocalTestRendererListener listner, boolean isPre)
+		public void draw(Graphics graphics, LocalTestRendererListener listner, TargetQueue target)
 		{
 			ArrayList<Message> messages;
 			lock.lock();
-			if (isPre)
-			{
-				messages = lastMessagesPre;
-			}
-			else if (!isPre)
-			{
-				messages = lastMessagesPost;
-			}
-			else
-			{
-				lock.unlock();
-				return;
-			}
+            switch (target)
+            {
+                case PRE:
+                    messages = lastMessagesPre;
+                    break;
+                case POST:
+                    messages = lastMessagesPost;
+                    break;
+                case ABS:
+                    messages = lastMessagesAbs;
+                    break;
+                default:
+                    lock.unlock();
+                    return;
+            }
 			
 			Color oldColor = graphics.getColor();
 			for (int i = 0; i < messages.size(); i++)
 			{
-				messages.get(i).draw(graphics, listner);
+				messages.get(i).draw(graphics, listner, target.equals(TargetQueue.ABS));
 			}
 			lock.unlock();
 			graphics.setColor(oldColor);
@@ -392,14 +420,17 @@ public final class LocalTestRendererListener {
 					reportException(e);
 				}
         	}
-        	listener.draw(graphics, this, true);
+        	listener.draw(graphics, this, TargetQueue.PRE);
     	}
     }
 
     public void afterDrawScene(Graphics graphics, World world, Game game, int canvasWidth, int canvasHeight,
                                double left, double top, double width, double height) {
         updateFields(graphics, world, game, canvasWidth, canvasHeight, left, top, width, height);
-        if (listener != null) listener.draw(graphics, this, false);
+        if (listener != null) {
+            listener.draw(graphics, this, TargetQueue.POST);
+            listener.draw(graphics, this, TargetQueue.ABS);
+        }
     }
 
     private void updateFields(Graphics graphics, World world, Game game, int canvasWidth, int canvasHeight,
@@ -417,30 +448,30 @@ public final class LocalTestRendererListener {
         this.height = height;
     }
 
-    private void drawLine(double x1, double y1, double x2, double y2) {
-        Point2I lineBegin = toCanvasPosition(x1, y1);
-        Point2I lineEnd = toCanvasPosition(x2, y2);
+    private void drawLine(double x1, double y1, double x2, double y2, boolean useAbsCoords) {
+        Point2I lineBegin = useAbsCoords ? new Point2I(x1, y1) : toCanvasPosition(x1, y1);
+        Point2I lineEnd = useAbsCoords ? new Point2I(x2, y2) : toCanvasPosition(x2, y2);
 
         graphics.drawLine(lineBegin.getX(), lineBegin.getY(), lineEnd.getX(), lineEnd.getY());
     }
 
-    private void fillCircle(double centerX, double centerY, double radius) {
-        Point2I topLeft = toCanvasPosition(centerX - radius, centerY - radius);
-        Point2I size = toCanvasOffset(2.0D * radius, 2.0D * radius);
+    private void fillCircle(double centerX, double centerY, double radius, boolean useAbsCoords) {
+        Point2I topLeft = useAbsCoords ? new Point2I(centerX - radius, centerY - radius) : toCanvasPosition(centerX - radius, centerY - radius);
+        Point2I size = useAbsCoords ? new Point2I(2.0D * radius, 2.0D * radius) : toCanvasOffset(2.0D * radius, 2.0D * radius);
 
         graphics.fillOval(topLeft.getX(), topLeft.getY(), size.getX(), size.getY());
     }
 
-    private void drawCircle(double centerX, double centerY, double radius) {
-        Point2I topLeft = toCanvasPosition(centerX - radius, centerY - radius);
-        Point2I size = toCanvasOffset(2.0D * radius, 2.0D * radius);
+    private void drawCircle(double centerX, double centerY, double radius, boolean useAbsCoords) {
+        Point2I topLeft = useAbsCoords ? new Point2I(centerX - radius, centerY - radius) : toCanvasPosition(centerX - radius, centerY - radius);
+        Point2I size = useAbsCoords ? new Point2I(2.0D * radius, 2.0D * radius) : toCanvasOffset(2.0D * radius, 2.0D * radius);
 
         graphics.drawOval(topLeft.getX(), topLeft.getY(), size.getX(), size.getY());
     }
     
-    private void showText(double X, double Y, String text)
+    private void showText(double X, double Y, String text, boolean useAbsCoords)
     {
-    	Point2I position = toCanvasPosition(X, Y);
+    	Point2I position = useAbsCoords ? new Point2I(X, Y) : toCanvasPosition(X, Y);
     	Font oldFont = graphics.getFont();
     	if (textFont == null)
     	{
@@ -465,32 +496,32 @@ public final class LocalTestRendererListener {
         graphics.drawArc(topLeft.getX(), topLeft.getY(), size.getX(), size.getY(), startAngle, arcAngle);
     }
 
-    private void fillRect(double left, double top, double width, double height) {
-        Point2I topLeft = toCanvasPosition(left, top);
-        Point2I size = toCanvasOffset(width, height);
+    private void fillRect(double left, double top, double width, double height, boolean useAbsCoords) {
+        Point2I topLeft = useAbsCoords ? new Point2I(left, top) : toCanvasPosition(left, top);
+        Point2I size = useAbsCoords ? new Point2I(width, height) : toCanvasOffset(width, height);
 
         graphics.fillRect(topLeft.getX(), topLeft.getY(), size.getX(), size.getY());
     }
 
-    private void drawRect(double left, double top, double width, double height) {
-        Point2I topLeft = toCanvasPosition(left, top);
-        Point2I size = toCanvasOffset(width, height);
+    private void drawRect(double left, double top, double width, double height, boolean useAbsCoords) {
+        Point2I topLeft = useAbsCoords ? new Point2I(left, top) : toCanvasPosition(left, top);
+        Point2I size = useAbsCoords ? new Point2I(width, height) : toCanvasOffset(width, height);
 
         graphics.drawRect(topLeft.getX(), topLeft.getY(), size.getX(), size.getY());
     }
 
-    private void drawPolygon(Point2D... points) {
+    private void drawPolygon(boolean useAbsCoords, Point2D... points) {
         int pointCount = points.length;
 
         for (int pointIndex = 1; pointIndex < pointCount; ++pointIndex) {
             Point2D pointA = points[pointIndex];
             Point2D pointB = points[pointIndex - 1];
-            drawLine(pointA.getX(), pointA.getY(), pointB.getX(), pointB.getY());
+            drawLine(pointA.getX(), pointA.getY(), pointB.getX(), pointB.getY(), useAbsCoords);
         }
 
         Point2D pointA = points[0];
         Point2D pointB = points[pointCount - 1];
-        drawLine(pointA.getX(), pointA.getY(), pointB.getX(), pointB.getY());
+        drawLine(pointA.getX(), pointA.getY(), pointB.getX(), pointB.getY(), useAbsCoords);
     }
 
     private Point2I toCanvasOffset(double x, double y) {

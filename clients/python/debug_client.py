@@ -4,6 +4,13 @@ Python client for visualizer plugin for Russian AI Cup
 
 import socket
 import collections
+import time
+import errno
+
+try:
+    xrange
+except NameError:
+    xrange = range
 
 Color = collections.namedtuple('Color', 'r g b')
 
@@ -14,13 +21,23 @@ class DebugClient(object):
     DEFAULT_HOST = '127.0.0.1'
     DEFAULT_PORT = 13579
 
-    MODE_PRE, MODE_POST, MODE_UNKNOWN = 'pre post unknown'.split()
-    BEGINS = {MODE_PRE: 'begin pre\n', MODE_POST: 'begin post\n'}
-    ENDS = {MODE_PRE: 'end pre\n', MODE_POST: 'end post\n'}
+    MODE_PRE, MODE_POST, MODE_ABS, MODE_UNKNOWN = 'pre post abs unknown'.split()
+    BEGINS = {MODE_PRE: 'begin pre\n', MODE_POST: 'begin post\n', MODE_ABS: 'begin abs\n'}
+    ENDS = {MODE_PRE: 'end pre\n', MODE_POST: 'end post\n', MODE_ABS: 'end abs\n'}
     def __init__(self, host=None, port=None):
         self.socket = socket.socket()
         self.socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, True)
-        self.socket.connect((host or self.DEFAULT_HOST, port or self.DEFAULT_PORT))
+        for _ in xrange(20):
+            try:
+                self.socket.connect((host or self.DEFAULT_HOST, port or self.DEFAULT_PORT))
+            except socket.error as ex:
+                if ex.errno == errno.WSAECONNREFUSED:
+                    time.sleep(0.1)
+                    continue
+                raise
+            else:
+                break
+
         self.mode = self.MODE_UNKNOWN
         self.last_sync_tick = None
         self.reader = self.__buffered_reader()
@@ -43,6 +60,16 @@ class DebugClient(object):
         self.mode = self.MODE_POST
         return self
 
+    def abs(self):
+        '''
+        Method to create an absolutely positioned drawing context, that is, to draw things that
+        should be drawn *after* the field is drawn by local runner (i.e. they will appear
+        "above" the field) and coordinates used are based on the view window, not the field
+        '''
+        assert self.mode == self.MODE_UNKNOWN
+        self.mode = self.MODE_ABS
+        return self
+
     def __enter__(self):
         self.start()
         return self
@@ -52,7 +79,7 @@ class DebugClient(object):
 
     def start(self):
         '''
-        Starts sending messages to specified queue (pre- or post-).
+        Starts sending messages to specified queue.
         Note: previous value in the queue will be cleaned up on the server
         '''
         assert self.mode in self.BEGINS

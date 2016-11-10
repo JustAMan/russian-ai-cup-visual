@@ -28,3 +28,6 @@ class MyStrategy:
             with debug.post() as dbg:
                 for w in world.wizards:
                     dbg.text(w.x, w.y, '%s (%s)' % ([player.name for player in world.players if player.id == w.owner_player_id][0], w.level), (0, 1, 0))
+
+            with debug.abs() as dbg:
+                dbg.text(500, 500, 'HELLO ABS WORLD', (1, 0, 0))
