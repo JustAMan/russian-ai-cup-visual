@@ -1,6 +1,5 @@
 import java.awt.*;
-import java.io.IOException;
-import java.io.OutputStream;
+import java.io.*;
 import java.net.Socket;
 import java.util.Formatter;
 import java.util.Locale;
@@ -10,6 +9,8 @@ public class VisualClient {
 
     Socket          socket;
     OutputStream    outputStream;
+    InputStream     inputStream;
+    BufferedReader  reader;
     final String    DEFAULT_HOST = "127.0.0.1";
     final int       DEFAULT_PORT = 13579;//13579
 
@@ -18,6 +19,8 @@ public class VisualClient {
         try {
             socket = new Socket(DEFAULT_HOST, DEFAULT_PORT);
             outputStream = socket.getOutputStream();
+            inputStream = socket.getInputStream();
+            reader = new BufferedReader(new InputStreamReader(inputStream));
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -136,6 +139,27 @@ public class VisualClient {
         try {
             outputStream.close();
             socket.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+    
+    /**
+     * synchronizes local-runner with the render commands from bot, call AFTER you have sent
+     * render commands for tick=tickIndex
+     */
+    public void sync(int tickIndex) {
+        try {
+            while(true) {
+                String line = reader.readLine();
+                if (line.startsWith("sync ")) {
+                    int tick = Integer.parseInt(line.substring(5).trim());
+                    sendCommand("ack");
+                    if (tick >= tickIndex) {
+                        break;
+                    }
+                }
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }
