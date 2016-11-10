@@ -11,7 +11,7 @@ public class VisualClient {
     Socket          socket;
     OutputStream    outputStream;
     final String    DEFAULT_HOST = "127.0.0.1";
-    final int       DEFAULT_PORT = 13579;
+    final int       DEFAULT_PORT = 13579;//13579
 
     public VisualClient() {
         Locale.setDefault(new Locale("en", "US"));
@@ -57,6 +57,13 @@ public class VisualClient {
     }
 
     /**
+     * start queueing commands to be displayed on the absolute coordinates
+     */
+    public void beginAbs() {
+        sendCommand("begin abs");
+    }
+
+    /**
      * mark either "pre" queue of commands as ready to be displayed
      */
     public void endPre() {
@@ -68,6 +75,13 @@ public class VisualClient {
      */
     public void endPost() {
         sendCommand("end post");
+    }
+
+    /**
+     * mark either "abs" queue of commands as ready to be displayed
+     */
+    public void endAbs() {
+        sendCommand("end abs");
     }
 
     /**
