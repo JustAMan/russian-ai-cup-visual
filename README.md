@@ -21,6 +21,7 @@ Currently known commands are:
 * `fill_rect x1 y1 x2 y2 <color>` - draw a filled rect with corners at (x1, y1) to (x2, y2) with color `color`
 * `line x1 y1 x2 y2 <color>` - draw a line from (x1, y1) to (x2, y2) with color `color`
 * `text x0 y0 msg <color>` - show `msg` at coordinates (x0, y0) with color `color`
+* `arc x y r startAngle arcAngle <color` - draw a arc with center at (x, y) with radius r, begins at startAngle and extends for arcAngle. All angles in radians
 
 Color `<color>` is actually an `r g b` triple of floats where `0.0 0.0 0.0` will be black and `1.0 1.0 1.0` will be white.
 
