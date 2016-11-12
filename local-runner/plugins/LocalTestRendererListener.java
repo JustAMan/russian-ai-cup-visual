@@ -51,8 +51,7 @@ public final class LocalTestRendererListener {
 		public final static String FILL_ARC = "fill_arc";
 		public final static String UNKNOWN = "unknown";
 		
-		private double x1, y1, x2, y2, radius;
-		private int startAngle, arcAngle;
+		private double x1, y1, x2, y2, radius, startAngle, arcAngle;
 		private Color color;
 		private String type, text;
 		
@@ -97,8 +96,8 @@ public final class LocalTestRendererListener {
 				x1 = Double.parseDouble(tokens[1]);
 				y1 = Double.parseDouble(tokens[2]);
 				radius = Double.parseDouble(tokens[3]);
-				startAngle = Integer.parseInt(tokens[4]);
-				arcAngle = Integer.parseInt(tokens[5]);
+				startAngle = -Double.parseDouble(tokens[4]);		// Graphics.drawArc() считает против чаовой стрелки
+				arcAngle = Double.parseDouble(tokens[5]);
 				colorPos = 6;
 			}
 			else
@@ -496,19 +495,29 @@ public final class LocalTestRendererListener {
     	graphics.setFont(oldFont);
     }
 
-    private void fillArc(double centerX, double centerY, double radius, int startAngle, int arcAngle) {
-        Point2I topLeft = toCanvasPosition(centerX - radius, centerY - radius);
-        Point2I size = toCanvasOffset(2.0D * radius, 2.0D * radius);
+	private void fillArc(double centerX, double centerY, double radius, double startAngle, double arcAngle) {
+		Point2I topLeft = toCanvasPosition(centerX - radius, centerY - radius);
+		Point2I size = toCanvasOffset(2.0D * radius, 2.0D * radius);
 
-        graphics.fillArc(topLeft.getX(), topLeft.getY(), size.getX(), size.getY(), startAngle, arcAngle);
-    }
+		// Convert from radians to degrees
+		int startAngleInt = (int) (Math.round(Math.toDegrees(startAngle)));
+		int arcAngleInt = (int) (Math.round(Math.toDegrees(arcAngle)));
 
-    private void drawArc(double centerX, double centerY, double radius, int startAngle, int arcAngle) {
-        Point2I topLeft = toCanvasPosition(centerX - radius, centerY - radius);
-        Point2I size = toCanvasOffset(2.0D * radius, 2.0D * radius);
 
-        graphics.drawArc(topLeft.getX(), topLeft.getY(), size.getX(), size.getY(), startAngle, arcAngle);
-    }
+		graphics.fillArc(topLeft.getX(), topLeft.getY(), size.getX(), size.getY(), startAngleInt, arcAngleInt);
+	}
+
+	private void drawArc(double centerX, double centerY, double radius, double startAngle, double arcAngle) {
+		Point2I topLeft = toCanvasPosition(centerX - radius, centerY - radius);
+		Point2I size = toCanvasOffset(2.0D * radius, 2.0D * radius);
+
+		// Convert from radians to degrees
+		int startAngleInt = (int) (Math.round(Math.toDegrees(startAngle)));
+		int arcAngleInt = (int) (Math.round(Math.toDegrees(arcAngle)));
+
+
+		graphics.drawArc(topLeft.getX(), topLeft.getY(), size.getX(), size.getY(), startAngleInt, arcAngleInt);
+	}
 
     private void fillRect(double left, double top, double width, double height, boolean useAbsCoords) {
         Point2I topLeft = useAbsCoords ? new Point2I(left, top) : toCanvasPosition(left, top);
