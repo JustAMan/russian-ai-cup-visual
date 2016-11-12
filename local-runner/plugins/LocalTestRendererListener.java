@@ -43,13 +43,16 @@ public final class LocalTestRendererListener {
 	{
 		public final static String CIRCLE = "circle";
 		public final static String RECT = "rect";
+		public final static String ARC = "arc";
 		public final static String LINE = "line";
 		public final static String TEXT = "text";
 		public final static String FILL_CIRCLE = "fill_circle";
 		public final static String FILL_RECT = "fill_rect";
+		public final static String FILL_ARC = "fill_arc";
 		public final static String UNKNOWN = "unknown";
 		
-		private double x1, y1, x2, y2;
+		private double x1, y1, x2, y2, radius;
+		private int startAngle, arcAngle;
 		private Color color;
 		private String type, text;
 		
@@ -89,6 +92,15 @@ public final class LocalTestRendererListener {
 				text = sb.toString();
 				colorPos = tokens.length - 3;
 			}
+			else if (type.equals(ARC) || type.equals(FILL_ARC))
+			{
+				x1 = Double.parseDouble(tokens[1]);
+				y1 = Double.parseDouble(tokens[2]);
+				radius = Double.parseDouble(tokens[3]);
+				startAngle = Integer.parseInt(tokens[4]);
+				arcAngle = Integer.parseInt(tokens[5]);
+				colorPos = 6;
+			}
 			else
 			{
 				type = UNKNOWN;
@@ -108,7 +120,9 @@ public final class LocalTestRendererListener {
 			if (type.equals(CIRCLE)) listner.drawCircle(x1, y1, x2, useAbsCoords);
 			if (type.equals(FILL_CIRCLE)) listner.fillCircle(x1, y1, x2, useAbsCoords);
 			if (type.equals(RECT)) listner.drawRect(x1, y1, x2 - x1, y2 - y1, useAbsCoords);
+			if (type.equals(ARC)) listner.drawArc(x1, y1, radius, startAngle, arcAngle);
 			if (type.equals(FILL_RECT)) listner.fillRect(x1, y1, x2 - x1, y2 - y1, useAbsCoords);
+			if (type.equals(FILL_ARC)) listner.fillArc(x1, y1, radius, startAngle, arcAngle);
 			if (type.equals(LINE)) listner.drawLine(x1, y1, x2, y2, useAbsCoords);
 			if (type.equals(TEXT)) listner.showText(x1, y1, text, useAbsCoords);
 		}
