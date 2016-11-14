@@ -10,7 +10,8 @@ import errno
 try:
     xrange
 except NameError:
-    xrange = range
+    # python 3-to-2 compatibility
+    xrange = range #pylint: disable=redefined-builtin, invalid-name
 
 Color = collections.namedtuple('Color', 'r g b')
 
@@ -119,6 +120,20 @@ class DebugClient(object):
         Draws a filled circle at (x0, y0) with radius "r0" and color "color"
         '''
         self.__send_command('fill_circle', color, args=(x0, y0, r0))
+
+    def arc(self, x0, y0, r0, start_angle, arc_angle, color): #pylint: disable=invalid-name, too-many-arguments
+        '''
+        Draws an arc at (x0, y0) with radius "r0" and color "color", starting at "start_angle"
+        and extending for "arc_angle" radians
+        '''
+        self.__send_command('arc', color, args=(x0, y0, r0, start_angle, arc_angle))
+
+    def fill_arc(self, x0, y0, r0, start_angle, arc_angle, color): #pylint: disable=invalid-name, too-many-arguments
+        '''
+        Draws a filled arc (sector) at (x0, y0) with radius "r0" and color "color", starting at
+        "start_angle" and extending for "arc_angle" radians
+        '''
+        self.__send_command('fill_arc', color, args=(x0, y0, r0, start_angle, arc_angle))
 
     def rect(self, x0, y0, x1, y1, color): #pylint: disable=invalid-name, too-many-arguments
         '''
