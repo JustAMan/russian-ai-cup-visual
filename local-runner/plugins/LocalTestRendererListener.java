@@ -119,9 +119,9 @@ public final class LocalTestRendererListener {
 			if (type.equals(CIRCLE)) listner.drawCircle(x1, y1, x2, useAbsCoords);
 			if (type.equals(FILL_CIRCLE)) listner.fillCircle(x1, y1, x2, useAbsCoords);
 			if (type.equals(RECT)) listner.drawRect(x1, y1, x2 - x1, y2 - y1, useAbsCoords);
-			if (type.equals(ARC)) listner.drawArc(x1, y1, radius, startAngle, arcAngle);
+			if (type.equals(ARC)) listner.drawArc(x1, y1, radius, startAngle, arcAngle, useAbsCoords);
 			if (type.equals(FILL_RECT)) listner.fillRect(x1, y1, x2 - x1, y2 - y1, useAbsCoords);
-			if (type.equals(FILL_ARC)) listner.fillArc(x1, y1, radius, startAngle, arcAngle);
+			if (type.equals(FILL_ARC)) listner.fillArc(x1, y1, radius, startAngle, arcAngle, useAbsCoords);
 			if (type.equals(LINE)) listner.drawLine(x1, y1, x2, y2, useAbsCoords);
 			if (type.equals(TEXT)) listner.showText(x1, y1, text, useAbsCoords);
 		}
@@ -495,26 +495,24 @@ public final class LocalTestRendererListener {
     	graphics.setFont(oldFont);
     }
 
-	private void fillArc(double centerX, double centerY, double radius, double startAngle, double arcAngle) {
-		Point2I topLeft = toCanvasPosition(centerX - radius, centerY - radius);
-		Point2I size = toCanvasOffset(2.0D * radius, 2.0D * radius);
+	private void fillArc(double centerX, double centerY, double radius, double startAngle, double arcAngle, boolean useAbsCoords) {
+		Point2I topLeft = useAbsCoords ? new Point2I(centerX - radius, centerY - radius) : toCanvasPosition(centerX - radius, centerY - radius);
+		Point2I size = useAbsCoords ? new Point2I(2.0D * radius, 2.0D * radius) : toCanvasOffset(2.0D * radius, 2.0D * radius);
 
 		// Convert from radians to degrees
 		int startAngleInt = (int) (Math.round(Math.toDegrees(startAngle)));
 		int arcAngleInt = (int) (Math.round(Math.toDegrees(arcAngle)));
-
 
 		graphics.fillArc(topLeft.getX(), topLeft.getY(), size.getX(), size.getY(), startAngleInt, arcAngleInt);
 	}
 
-	private void drawArc(double centerX, double centerY, double radius, double startAngle, double arcAngle) {
-		Point2I topLeft = toCanvasPosition(centerX - radius, centerY - radius);
-		Point2I size = toCanvasOffset(2.0D * radius, 2.0D * radius);
+	private void drawArc(double centerX, double centerY, double radius, double startAngle, double arcAngle, boolean useAbsCoords) {
+		Point2I topLeft = useAbsCoords ? new Point2I(centerX - radius, centerY - radius) : toCanvasPosition(centerX - radius, centerY - radius);
+		Point2I size = useAbsCoords ? new Point2I(2.0D * radius, 2.0D * radius) : toCanvasOffset(2.0D * radius, 2.0D * radius);
 
 		// Convert from radians to degrees
 		int startAngleInt = (int) (Math.round(Math.toDegrees(startAngle)));
 		int arcAngleInt = (int) (Math.round(Math.toDegrees(arcAngle)));
-
 
 		graphics.drawArc(topLeft.getX(), topLeft.getY(), size.getX(), size.getY(), startAngleInt, arcAngleInt);
 	}
