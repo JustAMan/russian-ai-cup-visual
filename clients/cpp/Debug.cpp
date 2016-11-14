@@ -29,7 +29,7 @@ namespace {
 #include <cstdio>
 #include <cstdlib>
 
-#include <string>
+#include <cstring>
 
 std::string Debug::DEFAULT_HOST = "127.0.0.1";
 std::string Debug::DEFAULT_PORT = "13579";
@@ -49,11 +49,14 @@ Debug::Debug()
 	hints.ai_socktype = SOCK_STREAM; /* Datagram socket */
 	hints.ai_flags = 0;
 	hints.ai_protocol = 0;          /* Any protocol */
+
+#if (defined _WIN32 || defined _WIN64)
 	WSADATA wsaData;
 	if (WSAStartup(0x0202, &wsaData)){
    		fprintf(stderr, "winsock is not initialized!\n");
    		WSACleanup();
 	}
+#endif
 	s = getaddrinfo(DEFAULT_HOST.c_str(), DEFAULT_PORT.c_str(), &hints, &result);
 	if (s != 0)
 	{
