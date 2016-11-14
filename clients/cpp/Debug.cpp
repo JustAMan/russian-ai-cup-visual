@@ -49,7 +49,11 @@ Debug::Debug()
 	hints.ai_socktype = SOCK_STREAM; /* Datagram socket */
 	hints.ai_flags = 0;
 	hints.ai_protocol = 0;          /* Any protocol */
-
+	WSADATA wsaData;
+	if (WSAStartup(0x0202, &wsaData)){
+   		printf("winsock does n't initialized !\n");
+   		WSACleanup();
+	}
 	s = getaddrinfo(DEFAULT_HOST.c_str(), DEFAULT_PORT.c_str(), &hints, &result);
 	if (s != 0)
 	{
