@@ -3,7 +3,7 @@ package model;
 /**
  * Тип дорожки.
  */
-public enum LineType {
+public enum LaneType {
     /**
      * Верхняя. Проходит через левый нижний, левый верхний и правый верхний углы карты.
      */

@@ -120,6 +120,22 @@ public class VisualClient {
     }
 
     /**
+     * draw a arc with center at (centerX, centerY), radius radius and angle arcAngle, started from startAngle with color color, angles in radians
+     */
+    public void arc(double centerX, double centerY, double radius, double startAngle, double arcAngle, Color color) {
+        Formatter f = new Formatter();
+        sendCommand(f.format("arc %1.1f %1.1f %1.1f %1.1f %1.1f %1.1f %1.1f %1.1f", centerX, centerY, radius, startAngle, arcAngle, (float) color.getRed()/255, (float) color.getGreen()/255, (float) color.getBlue()/255).toString());
+    }
+
+    /**
+     * draw a filled arc with center at (centerX, centerY), radius radius and angle arcAngle, started from startAngle with color color, angles in radians
+     */
+    public void fillArc(double centerX, double centerY, double radius, double startAngle, double arcAngle, Color color) {
+        Formatter f = new Formatter();
+        sendCommand(f.format("fill_arc %1.1f %1.1f %1.1f %1.1f %1.1f %1.1f %1.1f %1.1f", centerX, centerY, radius, startAngle, arcAngle, (float) color.getRed()/255, (float) color.getGreen()/255, (float) color.getBlue()/255).toString());
+    }
+
+    /**
      * draw a line from (x1, y1) to (x2, y2) with color color
      */
     public void line(double x1, double y1, double x2, double y2, Color color) {

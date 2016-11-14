@@ -19,7 +19,7 @@ public class Status {
     }
 
     /**
-     * @return Возвращает уникальынй идентификатор статуса.
+     * @return Возвращает уникальный идентификатор статуса.
      */
     public long getId() {
         return id;
