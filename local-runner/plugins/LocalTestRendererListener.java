@@ -96,8 +96,8 @@ public final class LocalTestRendererListener {
 				x1 = Double.parseDouble(tokens[1]);
 				y1 = Double.parseDouble(tokens[2]);
 				radius = Double.parseDouble(tokens[3]);
-				startAngle = -Double.parseDouble(tokens[4]);		// Graphics.drawArc() считает против чаовой стрелки
-				arcAngle = Double.parseDouble(tokens[5]);
+				startAngle = -Double.parseDouble(tokens[4]);  // Graphics.drawArc() считает против часовой стрелки
+				arcAngle =   -Double.parseDouble(tokens[5]);  // Graphics.drawArc() считает против часовой стрелки
 				colorPos = 6;
 			}
 			else
