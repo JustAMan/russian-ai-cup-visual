@@ -119,6 +119,16 @@ void Debug::endPost()
 	sendCommand("end post\n");
 }
 
+void Debug::beginAbs()
+{
+	sendCommand("begin abs\n");
+}
+
+void Debug::endAbs()
+{
+	sendCommand("end abs\n");
+}
+
 void Debug::writeWithColor(char* buf, int32_t color)
 {
 	size_t len = strlen(buf);
@@ -154,6 +164,20 @@ void Debug::fillRect(double x1, double y1, double x2, double y2, int32_t color)
 {
 	char buf[BUF_SIZE];
 	sprintf(buf, "fill_rect %lf %lf %lf %lf", x1, y1, x2, y2);
+	writeWithColor(buf, color);
+}
+
+void Debug::arc(double x, double y, double r, double start_angle, double arc_angle, int32_t color)
+{
+	char buf[BUF_SIZE];
+	sprintf(buf, "arc %lf %lf %lf %lf %lf", x, y, r, start_angle, arc_angle);
+	writeWithColor(buf, color);
+}
+
+void Debug::fillArc(double x, double y, double r, double start_angle, double arc_angle, int32_t color)
+{
+	char buf[BUF_SIZE];
+	sprintf(buf, "fill_arc %lf %lf %lf %lf %lf", x, y, r, start_angle, arc_angle);
 	writeWithColor(buf, color);
 }
 
