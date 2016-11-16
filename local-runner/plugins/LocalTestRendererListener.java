@@ -58,29 +58,29 @@ public final class LocalTestRendererListener {
 		public Message(String line)
 		{
 			String[] tokens = line.split(" ");
-			int colorPos = 1;
-			type = tokens[0];
+			int colorPos = 2;
+			type = tokens[1];
 			if (type.equals(CIRCLE) || type.equals(FILL_CIRCLE))
 			{
-				x1 = Double.parseDouble(tokens[1]);
-				y1 = Double.parseDouble(tokens[2]);
-				x2 = Double.parseDouble(tokens[3]);
-				colorPos = 4;
+				x1 = Double.parseDouble(tokens[2]);
+				y1 = Double.parseDouble(tokens[3]);
+				x2 = Double.parseDouble(tokens[4]);
+				colorPos = 5;
 			}
 			else if (type.equals(RECT) || type.equals(LINE) || type.equals(FILL_RECT))
 			{
-				x1 = Double.parseDouble(tokens[1]);
-				y1 = Double.parseDouble(tokens[2]);
-				x2 = Double.parseDouble(tokens[3]);
-				y2 = Double.parseDouble(tokens[4]);
-				colorPos = 5;
+				x1 = Double.parseDouble(tokens[2]);
+				y1 = Double.parseDouble(tokens[3]);
+				x2 = Double.parseDouble(tokens[4]);
+				y2 = Double.parseDouble(tokens[5]);
+				colorPos = 6;
 			}
 			else if (type.equals(TEXT))
 			{
-				x1 = Double.parseDouble(tokens[1]);
-				y1 = Double.parseDouble(tokens[2]);
+				x1 = Double.parseDouble(tokens[2]);
+				y1 = Double.parseDouble(tokens[3]);
 				StringBuilder sb = new StringBuilder();
-				for (int i = 3; i < tokens.length - 3; i++)
+				for (int i = 4; i < tokens.length - 3; i++)
 				{
 					sb.append(tokens[i]);
 					if (i < tokens.length - 4)
@@ -93,12 +93,12 @@ public final class LocalTestRendererListener {
 			}
 			else if (type.equals(ARC) || type.equals(FILL_ARC))
 			{
-				x1 = Double.parseDouble(tokens[1]);
-				y1 = Double.parseDouble(tokens[2]);
-				radius = Double.parseDouble(tokens[3]);
-				startAngle = -Double.parseDouble(tokens[4]);  // Graphics.drawArc() считает против часовой стрелки
-				arcAngle =   -Double.parseDouble(tokens[5]);  // Graphics.drawArc() считает против часовой стрелки
-				colorPos = 6;
+				x1 = Double.parseDouble(tokens[2]);
+				y1 = Double.parseDouble(tokens[3]);
+				radius = Double.parseDouble(tokens[4]);
+				startAngle = -Double.parseDouble(tokens[5]);  // Graphics.drawArc() считает против часовой стрелки
+				arcAngle =   -Double.parseDouble(tokens[6]);  // Graphics.drawArc() считает против часовой стрелки
+				colorPos = 7;
 			}
 			else
 			{
@@ -131,12 +131,10 @@ public final class LocalTestRendererListener {
 
     private final class ThreadListener extends Thread
     {
-    	public static final String BEGIN_PRE = "begin pre";
-    	public static final String END_PRE = "end pre";
-    	public static final String BEGIN_POST = "begin post";
-    	public static final String END_POST = "end post";
-        public static final String BEGIN_ABS = "begin abs";
-        public static final String END_ABS = "end abs";
+		public static final String PRE = "pre";
+		public static final String POST = "post";
+		public static final String ABS = "abs";
+		public static final String DRAW_END = "draw_end";
     	public static final String SYNC = "sync";
     	public static final String ACKNOWLEDGE = "ack";
 
@@ -206,75 +204,63 @@ public final class LocalTestRendererListener {
 					{
 						acknowledgeQueue.put(line);
 					}
-					else if (line.equals(BEGIN_PRE))
-	    			{
-                        // swap lists
-                        ArrayList<Message> tmp = lastMessagesPre;
-                        lastMessagesPre = messagesPre;
-                        messagesPre = tmp;
+					else if (line.equals(DRAW_END))
+					{
+						// Swap lists
+						ArrayList<Message> tmp = lastMessagesPre;
+						lastMessagesPre = messagesPre;
+						messagesPre = tmp;
+						messagesPre.clear();
 
-	    	    		messagesPre.clear();
-	    	    		queue = TargetQueue.PRE;
-	    			}
-	    			else if (line.equals(END_PRE))
-	    			{
-	    				queue = TargetQueue.NONE;
-	    			}
-	    			else if (line.equals(BEGIN_POST))
-	    			{
-                        // swap lists
-                        ArrayList<Message> tmp = lastMessagesPost;
-                        lastMessagesPost = messagesPost;
-                        messagesPost = tmp;
+						tmp = lastMessagesPost;
+						lastMessagesPost = messagesPost;
+						messagesPost = tmp;
+						messagesPost.clear();
 
-	    				messagesPost.clear();
-	    				queue = TargetQueue.POST;
-	    			}
-	    			else if (line.equals(END_POST))
+						tmp = lastMessagesAbs;
+						lastMessagesAbs = messagesAbs;
+						messagesAbs = tmp;
+						messagesAbs.clear();
+					}
+					else if (line.startsWith(PRE))
 	    			{
-	    				queue = TargetQueue.NONE;
+						Message msg = null;
+						try
+						{
+							msg = new Message(line);
+							messagesPre.add(msg);
+						}
+						catch (Exception e)
+						{
+							reportException(e);
+						}
 	    			}
-                    else if (line.equals(BEGIN_ABS))
+	    			else if (line.startsWith(POST))
+	    			{
+						Message msg = null;
+						try
+						{
+							msg = new Message(line);
+							messagesPost.add(msg);
+						}
+						catch (Exception e)
+						{
+							reportException(e);
+						}
+	    			}
+                    else if (line.startsWith(ABS))
                     {
-                        // swap lists
-                        ArrayList<Message> tmp = lastMessagesAbs;
-                        lastMessagesAbs = messagesAbs;
-                        messagesAbs = tmp;
-
-	    				messagesAbs.clear();
-                        queue = TargetQueue.ABS;
+						Message msg = null;
+						try
+						{
+							msg = new Message(line);
+							messagesAbs.add(msg);
+						}
+						catch (Exception e)
+						{
+							reportException(e);
+						}
                     }
-                    else if (line.equals(END_ABS))
-                    {
-	    				queue = TargetQueue.NONE;
-                    }
-	    			else if (queue != TargetQueue.NONE)
-	    			{
-	    				Message msg = null;
-	    				try
-	    				{
-	    					msg = new Message(line);
-	    				}
-	    				catch (Exception e)
-	    				{
-	    					reportException(e);
-	    				}
-	    				if (msg != null)
-	    				{
-                            switch (queue)
-                            {
-                                case POST:
-                                    messagesPost.add(msg);
-                                    break;
-                                case PRE:
-                                    messagesPre.add(msg);
-                                    break;
-                                case ABS:
-                                    messagesAbs.add(msg);
-                                    break;
-                            }
-	    				}
-	    			}
 					lock.unlock();
 	    		}
     		}
