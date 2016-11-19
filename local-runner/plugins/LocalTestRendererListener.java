@@ -54,6 +54,7 @@ public final class LocalTestRendererListener {
 		private double x1, y1, x2, y2, radius, startAngle, arcAngle;
 		private Color color;
 		private String type, text;
+		private int fontSize = 10;
 		
 		public Message(String line)
 		{
@@ -79,8 +80,10 @@ public final class LocalTestRendererListener {
 			{
 				x1 = Double.parseDouble(tokens[1]);
 				y1 = Double.parseDouble(tokens[2]);
+				fontSize = Integer.parseInt(tokens[3]);
+
 				StringBuilder sb = new StringBuilder();
-				for (int i = 3; i < tokens.length - 3; i++)
+				for (int i = 4; i < tokens.length - 3; i++)
 				{
 					sb.append(tokens[i]);
 					if (i < tokens.length - 4)
@@ -123,7 +126,7 @@ public final class LocalTestRendererListener {
 			if (type.equals(FILL_RECT)) listner.fillRect(x1, y1, x2 - x1, y2 - y1, useAbsCoords);
 			if (type.equals(FILL_ARC)) listner.fillArc(x1, y1, radius, startAngle, arcAngle, useAbsCoords);
 			if (type.equals(LINE)) listner.drawLine(x1, y1, x2, y2, useAbsCoords);
-			if (type.equals(TEXT)) listner.showText(x1, y1, text, useAbsCoords);
+			if (type.equals(TEXT)) listner.showText(x1, y1, text, fontSize, useAbsCoords);
 		}
 	}
 
@@ -482,13 +485,13 @@ public final class LocalTestRendererListener {
         graphics.drawOval(topLeft.getX(), topLeft.getY(), size.getX(), size.getY());
     }
     
-    private void showText(double X, double Y, String text, boolean useAbsCoords)
+    private void showText(double X, double Y, String text, int size, boolean useAbsCoords)
     {
     	Point2I position = useAbsCoords ? new Point2I(X, Y) : toCanvasPosition(X, Y);
     	Font oldFont = graphics.getFont();
     	if (textFont == null)
     	{
-    		textFont = new Font(oldFont.getFamily(), Font.PLAIN, 10);
+    		textFont = new Font(oldFont.getFamily(), Font.PLAIN, size);
     	}
     	graphics.setFont(textFont);
     	graphics.drawString(text, position.getX(), position.getY());
