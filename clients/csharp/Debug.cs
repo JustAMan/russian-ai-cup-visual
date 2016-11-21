@@ -1,83 +1,94 @@
-using System;
-using System.Net.Sockets;
-using System.IO;
-using System.Text;
+using System.Globalization;
 
-namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk {
+namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
+{
+    public static class Debug
+    {
+#if local
+        private static System.Net.Sockets.TcpClient client;
+        private static System.IO.StreamWriter writer;
 
-	// цвет нужно задавать hex-числом, например 0xABCDEF, AB - red, CD - green, EF - blue, каждый цвет - число из двух hex-цифр в диапазоне от 00 до FF
+        static Debug()
+        {
+            Connect("localhost", 13579);
+        }
+#endif
 
-	public struct Debug {
-		
-		private static TcpClient client;
-		private static StreamWriter writer;
+        public static void Connect(string host, int port) {
+#if local
+            client = new System.Net.Sockets.TcpClient(host, port);
+#endif
+        }
 
-		public static void connect(string host, int port) {
-			client = new TcpClient(host, port);
-		}
+        public static void Disconnect() {
+#if local
+            client.Close();
+#endif
+        }
 
-		public static void disconnect() {
-			client.Close();
-		}
+        private static void SendCommand(string command)
+        {
+#if local
+            if (client != null) {
+                if (writer == null) {
+                    writer = new System.IO.StreamWriter(client.GetStream(), System.Text.Encoding.ASCII);
+                }
+                writer.WriteLine(command);
+                writer.Flush();
+            }
+            System.Console.WriteLine(command);
+#endif
+        }
 
-		private static void sendCommand(string command) {
-			if (client != null) {
-				if (writer == null) {
-					writer = new StreamWriter(client.GetStream (), Encoding.ASCII);
-				}
-				writer.WriteLine(command);
-			}
-			System.Console.WriteLine(command);
-		}
 
-		public static void beginPre() {
-			sendCommand("begin pre");
-		}
+        public static void BeginPre() {
+            SendCommand("begin pre");
+        }
 
-		public static void beginPost() {
-			sendCommand("begin post");
-		}
-	
-		public static void endPre() {
-			sendCommand("end pre");
-		}
+        public static void BeginPost() {
+            SendCommand("begin post");
+        }
 
-		public static void endPost() {
-			sendCommand("end post");
-		}
+        public static void EndPre() {
+            SendCommand("end pre");
+        }
 
-		private static string encodeColor(int color) {
-			int red = (color & 0xFF0000) >> 16;
-			int green = (color & 0x00FF00) >> 8;
-			int blue = color & 0x0000FF;
+        public static void EndPost() {
+            SendCommand("end post");
+        }
 
-			return String.Format("{0} {1} {2}", (double)red / 256.0, (double)green / 256.0, (double)blue / 256.0);
-		}
+        private static string EncodeColor(int color) {
+            int red = (color & 0xFF0000) >> 16;
+            int green = (color & 0x00FF00) >> 8;
+            int blue = color & 0x0000FF;
 
-		public static void circle(double x, double y, double radius, int color) {
-			sendCommand(String.Format("circle {0} {1} {2} {3}", x, y, radius, encodeColor(color)));
-		}
+            return $"{Print((double) red / 256.0)} {Print((double) green / 256.0)} {Print((double) blue / 256.0)}";
+        }
 
-		public static void circle(double x, double y, double radius, int color) {
-			sendCommand(String.Format("fill_circle {0} {1} {2} {3}", x, y, radius, encodeColor(color)));
-		}
+        private static string Print(this double val) => val.ToString(CultureInfo.InvariantCulture);
 
-		public static void rect(double x1, double y1, double x2, double y2, int color) {
-			sendCommand(String.Format("rect {0} {1} {2} {3} {4}", x1, y1, x2, y2, encodeColor(color)));
-		}
+        public static void Circle(double x, double y, double radius, int color = 0x000000) {
+            SendCommand($"circle {x.Print()} {y.Print()} {radius.Print()} {EncodeColor(color)}");
+        }
 
-		public static void fillRect(double x1, double y1, double x2, double y2, int color) {
-			sendCommand(String.Format("fill_rect {0} {1} {2} {3} {4}", x1, y1, x2, y2, encodeColor(color)));
-		}
+        public static void FillCircle(double x, double y, double radius, int color = 0x000000) {
+            SendCommand($"fill_circle {x.Print()} {y.Print()} {radius.Print()} {EncodeColor(color)}");
+        }
 
-		public static void line(double x1, double y1, double x2, double y2, int color) {
-			sendCommand(String.Format("line {0} {1} {2} {3} {4}", x1, y1, x2, y2, encodeColor(color)));
-		}
+        public static void Rect(double x1, double y1, double x2, double y2, int color = 0x000000) {
+            SendCommand($"rect {x1.Print()} {y1.Print()} {x2.Print()} {y2.Print()} {EncodeColor(color)}");
+        }
 
-		public static void print(double x, double y, string msg, int color = 0) {
-			sendCommand(String.Format("text {0} {1} {2} {3}", x, y, msg, encodeColor(color)));
-		}
-	}
+        public static void FillRect(double x1, double y1, double x2, double y2, int color = 0x000000) {
+            SendCommand($"fill_rect {x1.Print()} {y1.Print()} {x2.Print()} {y2.Print()} {EncodeColor(color)}");
+        }
 
+        public static void Line(double x1, double y1, double x2, double y2, int color = 0x000000) {
+            SendCommand($"line {x1.Print()} {y1.Print()} {x2.Print()} {y2.Print()} {EncodeColor(color)}");
+        }
+
+        public static void Print(double x, double y, string msg, int color = 0x000000) {
+            SendCommand($"text {x.Print()} {y.Print()} {msg} {EncodeColor(color)}");
+        }
+    }
 }
-
