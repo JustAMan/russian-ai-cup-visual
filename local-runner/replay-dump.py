@@ -83,17 +83,23 @@ def ensureGameUrl(gameUrl):
     return 'http://russianaicup.ru/game/view/%d' % gameNumber
 
 def checkMap(replayFile):
+    with open(replayFile) as inp:
+        data = json.loads(inp.readline())
+    try:
+        mapName = data['mapName']
+    except KeyError:
+        # no maps this year, skip all the fuss
+        return
+
+    if mapName.endswith('.map'):
+        mapName = mapName[:-4]
+
     knownMaps = set()
     with zipfile.ZipFile('local-runner.jar') as localRunner:
         for name in localRunner.namelist():
             if MAP_NAME_RE.match(name):
                 knownMaps.add(MAP_NAME_RE.match(name).group(1))
 
-    with open(replayFile) as inp:
-        data = json.loads(inp.readline())
-    mapName = data['mapName']
-    if mapName.endswith('.map'):
-        mapName = mapName[:-4]
     if mapName not in knownMaps:
         print 'unknown map'
         unpackMap(mapName, data)

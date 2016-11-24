@@ -199,7 +199,7 @@ class DebugClient(object):
         '''
         if not self.is_replay(world):
             return
-        if self.last_sync_tick is None or world.tick > self.last_sync_tick:
+        if self.last_sync_tick is None or world.tick_index > self.last_sync_tick:
             if self.last_sync_tick is not None:
                 # server waits for an acknowledgement from us
                 self.socket.sendall('ack\n')
