@@ -31,6 +31,8 @@ public class VisualClient {
         try {
             socket = new Socket(host, port);
             outputStream = socket.getOutputStream();
+            inputStream = socket.getInputStream();
+            reader = new BufferedReader(new InputStreamReader(inputStream));
         } catch (IOException e) {
             e.printStackTrace();
         }
