@@ -6,6 +6,7 @@ import java.util.Locale;
 
 public class VisualClient {
 
+    enum TargetQueue {PRE, POST, ABS}
 
     Socket          socket;
     OutputStream    outputStream;
@@ -48,109 +49,72 @@ public class VisualClient {
     }
 
     /**
-     * start queueing commands to be displayed either before main drawing
+     * Сигнализирует о конце текущего цикла отрисовки
      */
-    public void beginPre() {
-        sendCommand("begin pre");
-    }
-
-    /**
-     * start queueing commands to be displayed either after main drawing
-     */
-    public void beginPost() {
-        sendCommand("begin post");
-    }
-
-    /**
-     * start queueing commands to be displayed on the absolute coordinates
-     */
-    public void beginAbs() {
-        sendCommand("begin abs");
-    }
-
-    /**
-     * mark either "pre" queue of commands as ready to be displayed
-     */
-    public void endPre() {
-        sendCommand("end pre");
-    }
-
-    /**
-     * mark either "post" queue of commands as ready to be displayed
-     */
-    public void endPost() {
-        sendCommand("end post");
-    }
-
-    /**
-     * mark either "abs" queue of commands as ready to be displayed
-     */
-    public void endAbs() {
-        sendCommand("end abs");
-    }
+    public void drawEnd() { sendCommand("draw_end"); }
 
     /**
      * draw a circle at (x, y) with radius r and color color
      */
-    public void circle(double x, double y, double r, Color color) {
+    public void circle(double x, double y, double r, Color color, TargetQueue targetQueue) {
         Formatter f = new Formatter();
-        sendCommand(f.format("circle %1.1f %1.1f %1.1f %1.1f %1.1f %1.1f", x, y, r, (float) color.getRed()/255, (float) color.getGreen()/255, (float) color.getBlue()/255).toString());
+        sendCommand(f.format("%s circle %1.1f %1.1f %1.1f %1.1f %1.1f %1.1f", targetQueue.name().toLowerCase(), x, y, r, (float) color.getRed()/255, (float) color.getGreen()/255, (float) color.getBlue()/255).toString());
     }
 
     /**
      * draw a filled circle at (x, y) with radius r and color color
      */
-    public void fillCircle(double x, double y, double r, Color color) {
+    public void fillCircle(double x, double y, double r, Color color, TargetQueue targetQueue) {
         Formatter f = new Formatter();
-        sendCommand(f.format("fill_circle %1.1f %1.1f %1.1f %1.1f %1.1f %1.1f", x, y, r, (float) color.getRed()/255, (float) color.getGreen()/255, (float) color.getBlue()/255).toString());
+        sendCommand(f.format("%s fill_circle %1.1f %1.1f %1.1f %1.1f %1.1f %1.1f", targetQueue.name().toLowerCase(), x, y, r, (float) color.getRed()/255, (float) color.getGreen()/255, (float) color.getBlue()/255).toString());
     }
 
     /**
      * draw a rect with corners at (x, y) to (x, y) with color color
      */
-    public void rect(double x1, double y1, double x2, double y2, Color color) {
+    public void rect(double x1, double y1, double x2, double y2, Color color, TargetQueue targetQueue) {
         Formatter f = new Formatter();
-        sendCommand(f.format("rect %1.1f %1.1f %1.1f %1.1f %1.1f %1.1f %1.1f", x1, y1, x2, y2, (float) color.getRed()/255, (float) color.getGreen()/255, (float) color.getBlue()/255).toString());
+        sendCommand(f.format("%s rect %1.1f %1.1f %1.1f %1.1f %1.1f %1.1f %1.1f", targetQueue.name().toLowerCase(), x1, y1, x2, y2, (float) color.getRed()/255, (float) color.getGreen()/255, (float) color.getBlue()/255).toString());
     }
 
     /**
      * draw a filled rect with corners at (x1, y1) to (x2, y2) with color color
      */
-    public void fillRect(double x1, double y1, double x2, double y2, Color color) {
+    public void fillRect(double x1, double y1, double x2, double y2, Color color, TargetQueue targetQueue) {
         Formatter f = new Formatter();
-        sendCommand(f.format("fill_rect %1.1f %1.1f %1.1f %1.1f %1.1f %1.1f %1.1f", x1, y1, x2, y2, (float) color.getRed()/255, (float) color.getGreen()/255, (float) color.getBlue()/255).toString());
+        sendCommand(f.format("%s fill_rect %1.1f %1.1f %1.1f %1.1f %1.1f %1.1f %1.1f", targetQueue.name().toLowerCase(), x1, y1, x2, y2, (float) color.getRed()/255, (float) color.getGreen()/255, (float) color.getBlue()/255).toString());
     }
 
     /**
      * draw a arc with center at (centerX, centerY), radius radius and angle arcAngle, started from startAngle with color color, angles in radians
      */
-    public void arc(double centerX, double centerY, double radius, double startAngle, double arcAngle, Color color) {
+    public void arc(double centerX, double centerY, double radius, double startAngle, double arcAngle, Color color, TargetQueue targetQueue) {
         Formatter f = new Formatter();
-        sendCommand(f.format("arc %1.1f %1.1f %1.1f %1.1f %1.1f %1.1f %1.1f %1.1f", centerX, centerY, radius, startAngle, arcAngle, (float) color.getRed()/255, (float) color.getGreen()/255, (float) color.getBlue()/255).toString());
+        sendCommand(f.format("%s arc %1.1f %1.1f %1.1f %1.1f %1.1f %1.1f %1.1f %1.1f", targetQueue.name().toLowerCase(), centerX, centerY, radius, startAngle, arcAngle, (float) color.getRed()/255, (float) color.getGreen()/255, (float) color.getBlue()/255).toString());
     }
 
     /**
      * draw a filled arc with center at (centerX, centerY), radius radius and angle arcAngle, started from startAngle with color color, angles in radians
      */
-    public void fillArc(double centerX, double centerY, double radius, double startAngle, double arcAngle, Color color) {
+    public void fillArc(double centerX, double centerY, double radius, double startAngle, double arcAngle, Color color, TargetQueue targetQueue) {
         Formatter f = new Formatter();
-        sendCommand(f.format("fill_arc %1.1f %1.1f %1.1f %1.1f %1.1f %1.1f %1.1f %1.1f", centerX, centerY, radius, startAngle, arcAngle, (float) color.getRed()/255, (float) color.getGreen()/255, (float) color.getBlue()/255).toString());
+        sendCommand(f.format("%s fill_arc %1.1f %1.1f %1.1f %1.1f %1.1f %1.1f %1.1f %1.1f", targetQueue.name().toLowerCase(), centerX, centerY, radius, startAngle, arcAngle, (float) color.getRed()/255, (float) color.getGreen()/255, (float) color.getBlue()/255).toString());
     }
 
     /**
      * draw a line from (x1, y1) to (x2, y2) with color color
      */
-    public void line(double x1, double y1, double x2, double y2, Color color) {
+    public void line(double x1, double y1, double x2, double y2, Color color, TargetQueue targetQueue) {
         Formatter f = new Formatter();
-        sendCommand(f.format("line %1.1f %1.1f %1.1f %1.1f %1.1f %1.1f %1.1f", x1, y1, x2, y2, (float) color.getRed()/255, (float) color.getGreen()/255, (float) color.getBlue()/255).toString());
+        sendCommand(f.format("%s line %1.1f %1.1f %1.1f %1.1f %1.1f %1.1f %1.1f", targetQueue.name().toLowerCase(), x1, y1, x2, y2, (float) color.getRed()/255, (float) color.getGreen()/255, (float) color.getBlue()/255).toString());
     }
 
     /**
      * show msg at coordinates (x, y) with color color
      */
-    public void text(double x, double y, String msg, Color color) {
+    public void text(double x, double y, String msg, Color color, TargetQueue targetQueue) {
         Formatter f = new Formatter();
-        sendCommand(f.format("text %1.1f %1.1f %s %1.1f %1.1f %1.1f", x, y, msg, (float) color.getRed()/255, (float) color.getGreen()/255, (float) color.getBlue()/255).toString());
+        sendCommand(f.format("%s text %1.1f %1.1f %s %1.1f %1.1f %1.1f", targetQueue.name().toLowerCase(), x, y, msg, (float) color.getRed()/255, (float) color.getGreen()/255, (float) color.getBlue()/255).toString());
     }
 
     public void stop() {
